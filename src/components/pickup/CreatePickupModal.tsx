@@ -1,0 +1,215 @@
+"use client";
+
+
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Loader2 } from "lucide-react";
+
+interface CreatePickupModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) => {
+    const [loading, setLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        title: "",
+        sportId: "soccer", // Placeholder, would be actual Sport ID
+        level: "intermediate",
+        location: "",
+        startTime: "",
+        playerLimit: "10",
+        fee: "0",
+        description: ""
+    });
+
+
+    // Use the Supabase client to get the current user
+    const [userId, setUserId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const supabase = createClient();
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) setUserId(user.id);
+        };
+        getUser();
+    }, []);
+
+    const handleSubmit = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch("/api/pickup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    ...formData,
+                    hostId: userId || "placeholder-user-id"
+                    // If userId is null, backend handles "placeholder-user-id" by making it NULL (guest) 
+                    // or if logged in, uses the Real ID.
+                })
+            });
+
+            if (response.ok) {
+                onClose();
+                // Refresh the list (could use a global state or simple window reload for now)
+                window.location.reload();
+            } else {
+                const errorData = await response.json();
+                alert(`Failed to create game: ${errorData.error || "Unknown error"}`);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("An error occurred.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[500px] bg-zinc-950 border-zinc-800 text-white">
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-black tracking-tighter uppercase">Host a Game</DialogTitle>
+                    <DialogDescription className="text-zinc-500">
+                        Fill out the details below to list your pickup session.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-6 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="sport" className="text-zinc-400">Sport</Label>
+                            <Select
+                                onValueChange={(v) => setFormData({ ...formData, sportId: v })}
+                                defaultValue={formData.sportId}
+                            >
+                                <SelectTrigger id="sport" className="bg-zinc-900 border-zinc-800">
+                                    <SelectValue placeholder="Select sport" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                                    <SelectItem value="soccer">Soccer</SelectItem>
+                                    <SelectItem value="basketball">Basketball</SelectItem>
+                                    <SelectItem value="tennis">Tennis</SelectItem>
+                                    <SelectItem value="volleyball">Volleyball</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="level" className="text-zinc-400">Skill Level</Label>
+                            <Select
+                                onValueChange={(v) => setFormData({ ...formData, level: v })}
+                                defaultValue={formData.level}
+                            >
+                                <SelectTrigger id="level" className="bg-zinc-900 border-zinc-800">
+                                    <SelectValue placeholder="Select level" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                                    <SelectItem value="beginner">Beginner</SelectItem>
+                                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                                    <SelectItem value="advanced">Advanced</SelectItem>
+                                    <SelectItem value="pro">Pro</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="title" className="text-zinc-400">Title</Label>
+                        <Input
+                            id="title"
+                            value={formData.title}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            placeholder="e.g. Sunday Morning Friendly"
+                            className="bg-zinc-900 border-zinc-800 focus-visible:ring-emerald-500"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="location" className="text-zinc-400">Location (Venue Name or Address)</Label>
+                        <Input
+                            id="location"
+                            value={formData.location}
+                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                            placeholder="e.g. Pan Pacific Park"
+                            className="bg-zinc-900 border-zinc-800 focus-visible:ring-emerald-500"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="date" className="text-zinc-400">Date/Time</Label>
+                            <Input
+                                id="date"
+                                type="datetime-local"
+                                value={formData.startTime}
+                                onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                                className="bg-zinc-900 border-zinc-800 focus-visible:ring-emerald-500 [color-scheme:dark]"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="limit" className="text-zinc-400">Player Limit</Label>
+                            <Input
+                                id="limit"
+                                type="number"
+                                value={formData.playerLimit}
+                                onChange={(e) => setFormData({ ...formData, playerLimit: e.target.value })}
+                                placeholder="10"
+                                className="bg-zinc-900 border-zinc-800 focus-visible:ring-emerald-500"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="desc" className="text-zinc-400">Additional Instructions</Label>
+                        <Textarea
+                            id="desc"
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                            placeholder="Bring light/dark shirts, water, etc."
+                            className="bg-zinc-900 border-zinc-800 focus-visible:ring-emerald-500 min-h-[80px]"
+                        />
+                    </div>
+                </div>
+
+                <Separator className="bg-zinc-800" />
+
+                <DialogFooter className="sm:justify-between items-center bg-zinc-950/50 -mx-6 -mb-6 p-6 rounded-b-lg">
+                    <div className="text-sm text-zinc-500">
+                        Est. Fee per player: <span className="text-emerald-500 font-bold">${formData.fee}.00</span>
+                    </div>
+                    <div className="flex gap-3">
+                        <Button variant="ghost" onClick={onClose} disabled={loading} className="hover:bg-zinc-900">Cancel</Button>
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={loading}
+                            className="bg-emerald-500 hover:bg-emerald-400 text-black font-bold min-w-[100px]"
+                        >
+                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "List Game"}
+                        </Button>
+                    </div>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
