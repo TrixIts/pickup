@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PickupMap } from "@/components/pickup/PickupMap";
 import { PickupList } from "@/components/pickup/PickupList";
 import { CreatePickupModal } from "@/components/pickup/CreatePickupModal";
@@ -10,6 +10,51 @@ import { Plus, Map as MapIcon, List as ListIcon } from "lucide-react";
 
 export default function PickupPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [sessions, setSessions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [highlightedGameId, setHighlightedGameId] = useState<string | null>(null);
+
+    // Filtering State
+    const [selectedSport, setSelectedSport] = useState<string | null>(null);
+    const [mapBounds, setMapBounds] = useState<{ north: number, south: number, east: number, west: number } | null>(null);
+
+    useEffect(() => {
+        fetch("/api/pickup")
+            .then((res) => res.json())
+            .then((data) => {
+                setSessions(data);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.error(err);
+                setLoading(false);
+            });
+    }, []);
+
+    // Filter Logic
+    // 1. Filter by Sport (Applied to both Map and List)
+    const sportFilteredSessions = sessions.filter(session => {
+        if (!selectedSport) return true;
+        return session.sport?.name?.toLowerCase() === selectedSport.toLowerCase();
+    });
+
+    // 2. Filter by Map Bounds (Applied to List only)
+    const listDisplayedSessions = sportFilteredSessions.filter(session => {
+        if (!mapBounds) return true;
+        // If session has no coords (e.g. legacy/mock), keep it or hide it? 
+        // Let's keep it visible in list if it has no coords, unless strictly map focused.
+        // Actually, if it has no coords, it won't be on the map, so maybe show it?
+        // But for new logic where everything has coords:
+        if (!session.latitude || !session.longitude) return true;
+
+        const { latitude, longitude } = session;
+        return (
+            latitude <= mapBounds.north &&
+            latitude >= mapBounds.south &&
+            longitude <= mapBounds.east &&
+            longitude >= mapBounds.west
+        );
+    });
 
     return (
         <div className="flex flex-col h-screen bg-black text-white overflow-hidden">
@@ -44,10 +89,20 @@ export default function PickupPage() {
                             </TabsList>
                         </div>
                         <TabsContent value="map" className="flex-1 m-0 p-0 relative h-full">
-                            <PickupMap />
+                            <PickupMap
+                                sessions={sportFilteredSessions}
+                                highlightedGameId={highlightedGameId}
+                                onMapMove={setMapBounds}
+                            />
                         </TabsContent>
                         <TabsContent value="list" className="flex-1 m-0 p-0 overflow-y-auto bg-black">
-                            <PickupList />
+                            <PickupList
+                                sessions={listDisplayedSessions}
+                                loading={loading}
+                                onHoverGame={setHighlightedGameId}
+                                selectedSport={selectedSport}
+                                onSelectSport={setSelectedSport}
+                            />
                         </TabsContent>
                     </Tabs>
                 </div>
@@ -55,10 +110,20 @@ export default function PickupPage() {
                 {/* Desktop View: Split Map/List */}
                 <div className="hidden md:flex h-full">
                     <div className="w-1/3 border-r border-zinc-800 overflow-y-auto bg-zinc-950">
-                        <PickupList />
+                        <PickupList
+                            sessions={listDisplayedSessions}
+                            loading={loading}
+                            onHoverGame={setHighlightedGameId}
+                            selectedSport={selectedSport}
+                            onSelectSport={setSelectedSport}
+                        />
                     </div>
                     <div className="flex-1 relative">
-                        <PickupMap />
+                        <PickupMap
+                            sessions={sportFilteredSessions}
+                            highlightedGameId={highlightedGameId}
+                            onMapMove={setMapBounds}
+                        />
                     </div>
                 </div>
             </main>

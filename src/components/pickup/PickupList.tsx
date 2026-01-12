@@ -1,27 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Search, MapPin, Calendar, Clock, Users, Loader2 } from "lucide-react";
 
-export const PickupList = () => {
-    const [sessions, setSessions] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+interface PickupListProps {
+    sessions: any[];
+    loading: boolean;
+    onHoverGame?: (id: string | null) => void;
+    selectedSport: string | null;
+    onSelectSport: (sport: string | null) => void;
+}
 
-    useEffect(() => {
-        fetch("/api/pickup")
-            .then((res) => res.json())
-            .then((data) => {
-                setSessions(data);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error(err);
-                setLoading(false);
-            });
-    }, []);
+export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSelectSport }: PickupListProps) => {
+    // Internal filtering state can stay here for now
+
 
     if (loading) {
         return (
@@ -43,9 +37,28 @@ export const PickupList = () => {
                     />
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                    <Badge variant="outline" className="bg-emerald-500 text-black border-none font-bold whitespace-nowrap px-3 py-1 cursor-pointer">All Sports</Badge>
-                    {["Soccer", "Basketball", "Tennis"].map((s) => (
-                        <Badge key={s} variant="outline" className="bg-zinc-900 border-zinc-800 text-zinc-400 whitespace-nowrap px-3 py-1 hover:text-white cursor-pointer transition-colors">
+                    <Badge
+                        variant="outline"
+                        onClick={() => onSelectSport(null)}
+                        className={`
+                            border-none font-bold whitespace-nowrap px-3 py-1 cursor-pointer transition-colors
+                            ${!selectedSport ? "bg-emerald-500 text-black" : "bg-zinc-900 text-zinc-400 hover:text-white"}
+                        `}
+                    >
+                        All Sports
+                    </Badge>
+                    {["Soccer", "Basketball", "Tennis", "Volleyball"].map((s) => (
+                        <Badge
+                            key={s}
+                            variant="outline"
+                            onClick={() => onSelectSport(s)}
+                            className={`
+                                border-zinc-800 whitespace-nowrap px-3 py-1 cursor-pointer transition-colors
+                                ${selectedSport === s
+                                    ? "bg-emerald-500 text-black border-none font-bold"
+                                    : "bg-zinc-900 text-zinc-400 hover:text-white"}
+                            `}
+                        >
                             {s}
                         </Badge>
                     ))}
@@ -58,7 +71,12 @@ export const PickupList = () => {
                     <div className="text-center py-10 text-zinc-500">No games found near you.</div>
                 ) : (
                     sessions.map((game) => (
-                        <Card key={game.id} className="bg-zinc-900 border-zinc-800 p-4 hover:border-emerald-500/50 transition-all cursor-pointer group">
+                        <Card
+                            key={game.id}
+                            className="bg-zinc-900 border-zinc-800 p-4 hover:border-emerald-500/50 transition-all cursor-pointer group"
+                            onMouseEnter={() => onHoverGame?.(game.id)}
+                            onMouseLeave={() => onHoverGame?.(null)}
+                        >
                             <div className="flex justify-between items-start mb-3">
                                 <div>
                                     <span className="text-[10px] font-bold tracking-widest text-emerald-500 uppercase">

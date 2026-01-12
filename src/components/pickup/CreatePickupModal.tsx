@@ -1,6 +1,5 @@
 "use client";
 
-
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import {
@@ -24,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
+import { LocationSearch } from "@/components/pickup/LocationSearch";
 
 interface CreatePickupModalProps {
     isOpen: boolean;
@@ -34,15 +34,16 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         title: "",
-        sportId: "soccer", // Placeholder, would be actual Sport ID
+        sportId: "soccer",
         level: "intermediate",
         location: "",
+        latitude: null as number | null,
+        longitude: null as number | null,
         startTime: "",
         playerLimit: "10",
         fee: "0",
         description: ""
     });
-
 
     // Use the Supabase client to get the current user
     const [userId, setUserId] = useState<string | null>(null);
@@ -65,14 +66,11 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                 body: JSON.stringify({
                     ...formData,
                     hostId: userId || "placeholder-user-id"
-                    // If userId is null, backend handles "placeholder-user-id" by making it NULL (guest) 
-                    // or if logged in, uses the Real ID.
                 })
             });
 
             if (response.ok) {
                 onClose();
-                // Refresh the list (could use a global state or simple window reload for now)
                 window.location.reload();
             } else {
                 const errorData = await response.json();
@@ -129,6 +127,7 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                                     <SelectItem value="intermediate">Intermediate</SelectItem>
                                     <SelectItem value="advanced">Advanced</SelectItem>
                                     <SelectItem value="pro">Pro</SelectItem>
+                                    <SelectItem value="friendly">Friendly / All Levels</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -146,13 +145,16 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="location" className="text-zinc-400">Location (Venue Name or Address)</Label>
-                        <Input
-                            id="location"
-                            value={formData.location}
-                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            placeholder="e.g. Pan Pacific Park"
-                            className="bg-zinc-900 border-zinc-800 focus-visible:ring-emerald-500"
+                        <LocationSearch
+                            onSelectLocation={(location, lat, lng) => {
+                                setFormData({
+                                    ...formData,
+                                    location,
+                                    latitude: lat,
+                                    longitude: lng
+                                });
+                            }}
+                            defaultValue={formData.location}
                         />
                     </div>
 

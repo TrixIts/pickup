@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     try {
         const supabase = await createClient();
         const body = await req.json();
-        const { title, sportId, hostId, location, startTime, playerLimit, fee, description } = body;
+        const { title, sportId, hostId, location, startTime, playerLimit, fee, description, latitude, longitude } = body;
 
         // Lookup sport ID if a name is provided (naive check if it's not a UUID)
         let finalSportId = sportId;
@@ -94,6 +94,8 @@ export async function POST(req: Request) {
                 player_limit: parseInt(playerLimit),
                 fee: parseFloat(fee),
                 description,
+                latitude,
+                longitude
             })
             .select()
             .single();
