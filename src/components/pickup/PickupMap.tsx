@@ -157,8 +157,10 @@ export const PickupMap = ({ sessions, highlightedGameId, onMapMove }: PickupMapP
                             </div>
                             <h3 className="font-bold text-sm mb-1">{popupInfo.title}</h3>
                             <p className="text-xs text-zinc-500 mb-3">{popupInfo.location}</p>
-                            <Button size="sm" className="w-full h-8 bg-black text-white hover:bg-zinc-800">
-                                Join Game
+                            <Button asChild size="sm" className="w-full h-8 bg-black text-white hover:bg-zinc-800">
+                                <Link href={`/pickup/${popupInfo.id}`}>
+                                    View Game
+                                </Link>
                             </Button>
                         </div>
                     </Popup>

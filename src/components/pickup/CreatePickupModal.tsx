@@ -22,7 +22,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import { LocationSearch } from "@/components/pickup/LocationSearch";
 
 interface CreatePickupModalProps {
@@ -42,7 +42,8 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
         startTime: "",
         playerLimit: "10",
         fee: "0",
-        description: ""
+        description: "",
+        isRecurring: false
     });
 
     // Use the Supabase client to get the current user
@@ -183,7 +184,6 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="desc" className="text-zinc-400">Additional Instructions</Label>
                         <Textarea
                             id="desc"
                             value={formData.description}
@@ -191,6 +191,17 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                             placeholder="Bring light/dark shirts, water, etc."
                             className="bg-zinc-900 border-zinc-800 focus-visible:ring-emerald-500 min-h-[80px]"
                         />
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 bg-zinc-900/50 rounded-2xl border border-zinc-800 cursor-pointer hover:border-zinc-700 transition-all"
+                        onClick={() => setFormData({ ...formData, isRecurring: !formData.isRecurring })}>
+                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${formData.isRecurring ? "bg-emerald-500 border-emerald-500" : "border-zinc-700"}`}>
+                            {formData.isRecurring && <Check className="h-4 w-4 text-black" />}
+                        </div>
+                        <div className="flex-1">
+                            <Label className="text-sm font-bold cursor-pointer">Make this a recurring weekly session</Label>
+                            <p className="text-[10px] text-zinc-500">Enable persistent chat history across all future sessions in this series.</p>
+                        </div>
                     </div>
                 </div>
 

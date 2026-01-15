@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     try {
         const supabase = await createClient();
         const body = await req.json();
-        const { title, sportId, hostId, location, startTime, playerLimit, fee, description, latitude, longitude } = body;
+        const { title, sportId, hostId, location, startTime, playerLimit, fee, description, latitude, longitude, isRecurring } = body;
 
         // Lookup sport ID if a name is provided (naive check if it's not a UUID)
         let finalSportId = sportId;
@@ -95,7 +95,9 @@ export async function POST(req: Request) {
                 fee: parseFloat(fee),
                 description,
                 latitude,
-                longitude
+                longitude,
+                is_recurring: isRecurring,
+                series_id: isRecurring ? crypto.randomUUID() : null
             })
             .select()
             .single();
@@ -103,6 +105,15 @@ export async function POST(req: Request) {
         if (error) {
             console.error("Supabase insert error:", error);
             return NextResponse.json({ error: error.message }, { status: 400 });
+        }
+
+        // Add Host as SessionPlayer with OWNER role
+        if (finalHostId && finalHostId !== 'placeholder-user-id') {
+            await supabase.from('pickup_session_players').insert({
+                session_id: session.id,
+                profile_id: finalHostId,
+                role: 'OWNER'
+            });
         }
 
         return NextResponse.json(session);

@@ -3,7 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Calendar, Clock, Users, Loader2 } from "lucide-react";
+import { Search, MapPin, Calendar, Clock, Users, Loader2, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 interface PickupListProps {
     sessions: any[];
@@ -114,9 +115,12 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
                                 <span className="text-xs font-medium text-zinc-500">
                                     Skill: <span className="text-zinc-300">{game.level || "Any"}</span>
                                 </span>
-                                <button className="text-xs font-bold text-emerald-500 hover:text-emerald-400 group-hover:translate-x-1 transition-transform">
-                                    View Game →
-                                </button>
+                                <Link
+                                    href={`/pickup/${game.id}`}
+                                    className="text-xs font-bold text-emerald-500 hover:text-emerald-400 group-hover:translate-x-1 transition-transform flex items-center gap-1"
+                                >
+                                    View Game <ChevronRight className="h-3 w-3" />
+                                </Link>
                             </div>
                         </Card>
                     ))

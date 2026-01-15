@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
+import { GetStartedButton } from "@/components/landing/GetStartedButton";
 
 export default function Home() {
   return (
@@ -20,9 +21,7 @@ export default function Home() {
 
           <div className="flex items-center gap-4">
             <Link href="/login" className="text-sm font-medium text-zinc-400 hover:text-white">Sign In</Link>
-            <Link href="/login" className="rounded-full bg-white px-5 py-2 text-sm font-bold text-black transition-transform hover:scale-105 active:scale-95">
-              Get Started
-            </Link>
+            <GetStartedButton />
           </div>
         </div>
       </nav>

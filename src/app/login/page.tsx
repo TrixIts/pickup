@@ -6,16 +6,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 
-export default function LoginPage() {
+import { Suspense } from "react";
+
+export default function LoginPageWrapper() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>}>
+            <LoginPage />
+        </Suspense>
+    );
+}
+
+function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const [isSignUp, setIsSignUp] = useState(searchParams.get("signup") === "true");
     const supabase = createClient();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -42,10 +54,9 @@ export default function LoginPage() {
         setLoading(true);
         setError(null);
 
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
-            // Redirect to callback route to handle email verification link if needed
             options: {
                 emailRedirectTo: `${location.origin}/auth/callback`,
             },
@@ -54,10 +65,12 @@ export default function LoginPage() {
         if (error) {
             setError(error.message);
             setLoading(false);
+        } else if (data.session) {
+            // Email confirmation is disabled, auto-login successful
+            router.push("/pickup");
+            router.refresh();
         } else {
-            // Automatically sign in if email confirmation is disabled, or show message
-            // For now, assume it might work or require check
-            setError("Check your email for a confirmation link (if enabled), or simpler: try logging in if you disabled verification.");
+            setError("Check your email for a confirmation link. To skip this, disable 'Confirm email' in your Supabase Auth settings.");
             setLoading(false);
         }
     };
@@ -66,11 +79,15 @@ export default function LoginPage() {
         <div className="flex min-h-screen w-full items-center justify-center bg-black text-white p-4">
             <div className="w-full max-w-md space-y-8 rounded-2xl border border-zinc-800 bg-zinc-950 p-8 shadow-xl">
                 <div className="text-center">
-                    <h2 className="text-3xl font-black tracking-tighter">Welcome Back</h2>
-                    <p className="mt-2 text-sm text-zinc-400">Sign in to list games and manage your league.</p>
+                    <h2 className="text-3xl font-black tracking-tighter">
+                        {isSignUp ? "Create Account" : "Welcome Back"}
+                    </h2>
+                    <p className="mt-2 text-sm text-zinc-400">
+                        {isSignUp ? "Join the league to start playing today." : "Sign in to list games and manage your league."}
+                    </p>
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-6">
+                <form onSubmit={isSignUp ? handleSignUp : handleLogin} className="space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
                         <Input
@@ -101,23 +118,25 @@ export default function LoginPage() {
                         </div>
                     )}
 
-                    <div className="flex gap-4">
-                        <Button
-                            type="submit"
-                            disabled={loading}
-                            className="flex-1 bg-emerald-500 text-black font-bold hover:bg-emerald-400"
-                        >
-                            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
-                        </Button>
-                        <Button
+                    <Button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-emerald-500 text-black font-bold hover:bg-emerald-400 h-11 text-base"
+                    >
+                        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (isSignUp ? "Create Account" : "Sign In")}
+                    </Button>
+
+                    <div className="text-center text-sm">
+                        <span className="text-zinc-500">
+                            {isSignUp ? "Already have an account? " : "Don't have an account? "}
+                        </span>
+                        <button
                             type="button"
-                            variant="outline"
-                            disabled={loading}
-                            onClick={handleSignUp}
-                            className="flex-1 border-zinc-800 bg-transparent text-white hover:bg-zinc-900"
+                            onClick={() => setIsSignUp(!isSignUp)}
+                            className="text-emerald-500 font-bold hover:underline"
                         >
-                            Sign Up
-                        </Button>
+                            {isSignUp ? "Sign In" : "Sign Up"}
+                        </button>
                     </div>
                 </form>
 

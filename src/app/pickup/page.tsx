@@ -6,7 +6,10 @@ import { PickupList } from "@/components/pickup/PickupList";
 import { CreatePickupModal } from "@/components/pickup/CreatePickupModal";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Map as MapIcon, List as ListIcon } from "lucide-react";
+import { Plus, Map as MapIcon, List as ListIcon, Loader2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { Navbar } from "@/components/layout/Navbar";
 
 export default function PickupPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -18,7 +21,28 @@ export default function PickupPage() {
     const [selectedSport, setSelectedSport] = useState<string | null>(null);
     const [mapBounds, setMapBounds] = useState<{ north: number, south: number, east: number, west: number } | null>(null);
 
+    const supabase = createClient();
+    const router = useRouter();
+
     useEffect(() => {
+        const checkUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // Check if profile is complete
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("age_range")
+                    .eq("id", user.id)
+                    .single();
+
+                if (!profile?.age_range) {
+                    router.push("/onboarding");
+                }
+            }
+        };
+
+        checkUser();
+
         fetch("/api/pickup")
             .then((res) => res.json())
             .then((data) => {
@@ -29,7 +53,7 @@ export default function PickupPage() {
                 console.error(err);
                 setLoading(false);
             });
-    }, []);
+    }, [router, supabase]);
 
     // Filter Logic
     // 1. Filter by Sport (Applied to both Map and List)
@@ -58,10 +82,12 @@ export default function PickupPage() {
 
     return (
         <div className="flex flex-col h-screen bg-black text-white overflow-hidden">
-            {/* Top Header */}
-            <header className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-black/50 backdrop-blur-md z-10 shrink-0">
+            <Navbar />
+
+            {/* Action Bar */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950 shrink-0">
                 <div>
-                    <h1 className="text-2xl font-black tracking-tighter uppercase">Pickup Discovery</h1>
+                    <h1 className="text-xl font-black tracking-tighter uppercase">Pickup Discovery</h1>
                     <p className="text-xs text-zinc-500 font-medium">Find games near Los Angeles, CA</p>
                 </div>
                 <Button
@@ -71,7 +97,7 @@ export default function PickupPage() {
                     <Plus className="h-4 w-4" />
                     Create Game
                 </Button>
-            </header>
+            </div>
 
             {/* Main Content Area */}
             <main className="flex-1 relative overflow-hidden">
