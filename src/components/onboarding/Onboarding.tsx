@@ -31,9 +31,7 @@ const STEPS = [
     { id: "final", title: "Finalize" }
 ];
 
-const AGE_RANGES = ["18-29", "30-39", "40-49", "50-59", "60+"];
-const GENDERS = ["Male", "Female", "Non-binary", "Prefer not to say"];
-const SKILL_LEVELS = ["BEGINNER", "INTERMEDIATE", "ADVANCED", "PRO"];
+import { AGE_RANGES, GENDERS, SKILL_LEVELS } from "@/lib/constants";
 
 export const Onboarding = () => {
     const [currentStep, setCurrentStep] = useState(0);

@@ -6,7 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MapPin, Clock, ArrowRight, Trophy, Users } from "lucide-react";
+import { Calendar, MapPin, Clock, ArrowRight, Trophy, Users, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { ProfileSettings } from "@/components/profile/ProfileSettings";
@@ -83,44 +83,39 @@ export default function DashboardPage() {
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Stats/Profile Summary (Placeholder for now) */}
+                    {/* Left Column: Stats/Profile Summary */}
                     <div className="space-y-6">
-                        <Card className="bg-zinc-950 border-zinc-900">
-                            <CardHeader>
-                                <CardTitle className="text-lg font-black uppercase text-zinc-400">Player Stats</CardTitle>
+                        <Card className="bg-zinc-950 border-zinc-900 overflow-hidden">
+                            <CardHeader className="bg-zinc-900/50 pb-4">
+                                <CardTitle className="text-lg font-black uppercase text-white flex items-center gap-2">
+                                    <Trophy className="h-5 w-5 text-emerald-500" /> Player Stats
+                                </CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-900/50">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
-                                            <Trophy className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold">Games Played</p>
-                                            <p className="text-xs text-zinc-400">All time</p>
-                                        </div>
+                            <CardContent className="space-y-4 pt-4">
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-900 border border-zinc-800">
+                                    <div>
+                                        <p className="text-sm font-bold text-zinc-300">Games Played</p>
+                                        <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">All time</p>
                                     </div>
-                                    <span className="text-2xl font-black text-white">{pastGames.length}</span>
+                                    <span className="text-3xl font-black text-white">{pastGames.length}</span>
                                 </div>
-                                <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-900/50">
-                                    <div className="flex items-center gap-3">
-                                        <div className="p-2 rounded-lg bg-zinc-800 text-white">
-                                            <Calendar className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold">Upcoming</p>
-                                            <p className="text-xs text-zinc-400">Scheduled</p>
-                                        </div>
+                                <div className="flex items-center justify-between p-4 rounded-xl bg-zinc-900 border border-zinc-800">
+                                    <div>
+                                        <p className="text-sm font-bold text-zinc-300">Upcoming</p>
+                                        <p className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Scheduled</p>
                                     </div>
-                                    <span className="text-2xl font-black text-white">{upcomingGames.length}</span>
+                                    <span className="text-3xl font-black text-emerald-500">{upcomingGames.length}</span>
                                 </div>
                             </CardContent>
                         </Card>
 
-                        <div className="p-6 rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-black">
-                            <h3 className="font-black text-xl mb-2">Find More Games</h3>
-                            <p className="text-black/70 font-medium mb-6 text-sm">Browse the map to find nearby sessions fitting your schedule.</p>
-                            <Button asChild className="w-full bg-black text-white hover:bg-zinc-900 border-0">
+                        <div className="p-8 rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-black shadow-lg shadow-emerald-900/20">
+                            <MapPin className="h-8 w-8 mb-4 text-black/80" />
+                            <h3 className="font-black text-2xl mb-2 tracking-tight">Find More Games</h3>
+                            <p className="text-black/70 font-medium mb-6 leading-relaxed">
+                                Browse the map to find nearby sessions fitting your schedule.
+                            </p>
+                            <Button asChild className="w-full bg-black text-white hover:bg-zinc-900 border-0 h-12 rounded-xl font-bold">
                                 <Link href="/pickup">Explore Map</Link>
                             </Button>
                         </div>
@@ -129,35 +124,54 @@ export default function DashboardPage() {
                     {/* Right Column: Games List */}
                     <div className="lg:col-span-2">
                         <Tabs defaultValue="upcoming" className="w-full">
-                            <TabsList className="bg-zinc-900 border border-zinc-900 mb-6">
-                                <TabsTrigger value="upcoming" className="data-[state=active]:bg-zinc-800">Upcoming Games</TabsTrigger>
-                                <TabsTrigger value="history" className="data-[state=active]:bg-zinc-800">History</TabsTrigger>
+                            <TabsList className="w-full p-1 bg-zinc-900/50 border border-zinc-900 rounded-2xl h-14 mb-8 grid grid-cols-2">
+                                <TabsTrigger
+                                    value="upcoming"
+                                    className="rounded-xl h-full font-bold data-[state=active]:bg-emerald-500 data-[state=active]:text-black data-[state=active]:shadow-lg transition-all"
+                                >
+                                    Upcoming Games
+                                </TabsTrigger>
+                                <TabsTrigger
+                                    value="history"
+                                    className="rounded-xl h-full font-bold data-[state=active]:bg-zinc-800 data-[state=active]:text-white transition-all text-zinc-500 hover:text-zinc-300"
+                                >
+                                    History
+                                </TabsTrigger>
                             </TabsList>
 
-                            <TabsContent value="upcoming" className="space-y-4">
+                            <TabsContent value="upcoming" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {loading ? (
-                                    <div className="text-zinc-500 text-center py-12">Loading schedule...</div>
+                                    <div className="text-zinc-500 text-center py-12 flex flex-col items-center gap-4">
+                                        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+                                        <p>Loading schedule...</p>
+                                    </div>
                                 ) : upcomingGames.length > 0 ? (
                                     upcomingGames.map((game) => (
                                         <GameCard key={game.id} game={game} />
                                     ))
                                 ) : (
-                                    <div className="text-center py-12 border border-dashed border-zinc-800 rounded-3xl">
-                                        <p className="text-zinc-400 mb-4">No upcoming games scheduled.</p>
-                                        <Button asChild variant="outline" className="text-white border-zinc-700 hover:bg-zinc-800">
+                                    <div className="flex flex-col items-center justify-center py-16 px-4 border-2 border-dashed border-zinc-900 rounded-3xl bg-zinc-950/50">
+                                        <div className="h-16 w-16 rounded-full bg-zinc-900 flex items-center justify-center mb-4">
+                                            <Calendar className="h-8 w-8 text-zinc-700" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-white mb-2">No upcoming games</h3>
+                                        <p className="text-zinc-500 mb-6 text-center max-w-xs">You haven't joined any upcoming sessions yet.</p>
+                                        <Button asChild className="bg-emerald-500 text-black hover:bg-emerald-400 font-bold">
                                             <Link href="/pickup">Find a Game</Link>
                                         </Button>
                                     </div>
                                 )}
                             </TabsContent>
 
-                            <TabsContent value="history" className="space-y-4">
+                            <TabsContent value="history" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {pastGames.length > 0 ? (
                                     pastGames.map((game) => (
                                         <GameCard key={game.id} game={game} isPast />
                                     ))
                                 ) : (
-                                    <div className="text-center py-12 text-zinc-500">No game history yet.</div>
+                                    <div className="text-center py-16 border-2 border-dashed border-zinc-900 rounded-3xl">
+                                        <p className="text-zinc-500 font-bold">No game history yet.</p>
+                                    </div>
                                 )}
                             </TabsContent>
                         </Tabs>
