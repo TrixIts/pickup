@@ -44,7 +44,7 @@ function LoginPage() {
             setError(error.message);
             setLoading(false);
         } else {
-            router.push("/pickup");
+            router.push("/dashboard");
             router.refresh();
         }
     };
@@ -145,7 +145,7 @@ function LoginPage() {
                         const { error } = await supabase.auth.signInWithOAuth({
                             provider: 'google',
                             options: {
-                                redirectTo: `${location.origin}/auth/callback`,
+                                redirectTo: `${location.origin}/auth/callback?next=/dashboard`,
                                 queryParams: {
                                     access_type: 'offline',
                                     prompt: 'consent',
@@ -204,7 +204,7 @@ function LoginPage() {
                         ← Back to Home
                     </Link>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
