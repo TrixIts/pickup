@@ -20,40 +20,54 @@ export default function PickupPage() {
     // Filtering State
     const [selectedSport, setSelectedSport] = useState<string | null>(null);
     const [mapBounds, setMapBounds] = useState<{ north: number, south: number, east: number, west: number } | null>(null);
+    const [userLocation, setUserLocation] = useState<{ latitude: number, longitude: number, zoom: number } | null>(null);
 
     const supabase = createClient();
     const router = useRouter();
 
     useEffect(() => {
-        const checkUser = async () => {
+        const init = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 // Check if profile is complete
                 const { data: profile } = await supabase
                     .from("profiles")
-                    .select("age_range")
+                    .select("age_range, latitude, longitude, commute_radius")
                     .eq("id", user.id)
                     .single();
 
                 if (!profile?.age_range) {
                     router.push("/onboarding");
+                    return;
                 }
+
+                if (profile.latitude && profile.longitude) {
+                    const radius = profile.commute_radius || 10;
+                    // Heuristic: Zoom 13 for ~3 miles, Zoom 11 for ~12 miles, Zoom 9 for ~50 miles
+                    const zoom = Math.max(9, Math.min(14, Math.round(13 - Math.log2(radius / 2.5))));
+                    setUserLocation({
+                        latitude: profile.latitude,
+                        longitude: profile.longitude,
+                        zoom
+                    });
+                }
+            }
+
+            try {
+                const res = await fetch("/api/pickup");
+                const data = await res.json();
+                setSessions(data);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
             }
         };
 
-        checkUser();
-
-        fetch("/api/pickup")
-            .then((res) => res.json())
-            .then((data) => {
-                setSessions(data);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error(err);
-                setLoading(false);
-            });
+        init();
     }, [router, supabase]);
+
+
 
     // Filter Logic
     // 1. Filter by Sport (Applied to both Map and List)
@@ -119,6 +133,7 @@ export default function PickupPage() {
                                 sessions={sportFilteredSessions}
                                 highlightedGameId={highlightedGameId}
                                 onMapMove={setMapBounds}
+                                userLocation={userLocation}
                             />
                         </TabsContent>
                         <TabsContent value="list" className="flex-1 m-0 p-0 overflow-y-auto bg-black">
@@ -149,6 +164,7 @@ export default function PickupPage() {
                             sessions={sportFilteredSessions}
                             highlightedGameId={highlightedGameId}
                             onMapMove={setMapBounds}
+                            userLocation={userLocation}
                         />
                     </div>
                 </div>

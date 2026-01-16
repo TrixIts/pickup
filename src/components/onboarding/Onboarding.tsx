@@ -128,6 +128,8 @@ export const Onboarding = () => {
             age_range: formData.ageRange,
             gender: formData.gender,
             location: formData.location,
+            latitude: formData.lat,
+            longitude: formData.lng,
             commute_radius: formData.commuteRadius,
             interested_in_leagues: formData.interestedInLeagues,
             avatar_url: formData.avatarUrl,

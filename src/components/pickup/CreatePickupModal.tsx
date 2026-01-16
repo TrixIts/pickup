@@ -22,8 +22,10 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, Search, MapPin as MapPinIcon } from "lucide-react";
 import { LocationSearch } from "@/components/pickup/LocationSearch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LocationPickerMap } from "@/components/pickup/LocationPickerMap";
 
 interface CreatePickupModalProps {
     isOpen: boolean;
@@ -45,6 +47,7 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
         description: "",
         isRecurring: false
     });
+    const [activeTab, setActiveTab] = useState("search");
 
     // Use the Supabase client to get the current user
     const [userId, setUserId] = useState<string | null>(null);
@@ -57,6 +60,46 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
         };
         getUser();
     }, []);
+
+    const handleMapLocationSelect = async (lat: number, lng: number) => {
+        setFormData(prev => ({
+            ...prev,
+            latitude: lat,
+            longitude: lng,
+        }));
+
+        // Reverse Geocode
+        try {
+            const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+            if (mapboxToken) {
+                const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxToken}&types=address,poi`);
+                const data = await res.json();
+                if (data.features && data.features.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        location: data.features[0].place_name,
+                        latitude: lat,
+                        longitude: lng
+                    }));
+                } else {
+                    setFormData(prev => ({
+                        ...prev,
+                        location: `${lat.toFixed(4)}, ${lng.toFixed(4)}`, // Fallback
+                        latitude: lat,
+                        longitude: lng
+                    }));
+                }
+            }
+        } catch (e) {
+            console.error("Reverse geocoding failed", e);
+            setFormData(prev => ({
+                ...prev,
+                location: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+                latitude: lat,
+                longitude: lng
+            }));
+        }
+    };
 
     const handleSubmit = async () => {
         setLoading(true);
@@ -145,18 +188,46 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <LocationSearch
-                            onSelectLocation={(location, lat, lng) => {
-                                setFormData({
-                                    ...formData,
-                                    location,
-                                    latitude: lat,
-                                    longitude: lng
-                                });
-                            }}
-                            defaultValue={formData.location}
-                        />
+                    <div className="space-y-3">
+                        <Label className="text-zinc-400">Location</Label>
+                        <Tabs defaultValue="search" className="w-full" onValueChange={setActiveTab}>
+                            <TabsList className="grid w-full grid-cols-2 bg-zinc-900 border border-zinc-800 mb-2">
+                                <TabsTrigger value="search" className="data-[state=active]:bg-zinc-800 gap-2 text-xs">
+                                    <Search className="h-3 w-3" /> Search Address
+                                </TabsTrigger>
+                                <TabsTrigger value="map" className="data-[state=active]:bg-zinc-800 gap-2 text-xs">
+                                    <MapPinIcon className="h-3 w-3" /> Pin on Map
+                                </TabsTrigger>
+                            </TabsList>
+
+                            <TabsContent value="search" className="mt-0">
+                                <LocationSearch
+                                    onSelectLocation={(location, lat, lng) => {
+                                        setFormData({
+                                            ...formData,
+                                            location,
+                                            latitude: lat,
+                                            longitude: lng
+                                        });
+                                    }}
+                                    defaultValue={formData.location}
+                                />
+                            </TabsContent>
+
+                            <TabsContent value="map" className="mt-0">
+                                <LocationPickerMap
+                                    className="h-[200px] w-full"
+                                    initialLatitude={formData.latitude}
+                                    initialLongitude={formData.longitude}
+                                    onLocationSelect={handleMapLocationSelect}
+                                />
+                                {formData.location && (
+                                    <p className="mt-2 text-xs text-zinc-500 truncate">
+                                        Selected: <span className="text-emerald-500">{formData.location}</span>
+                                    </p>
+                                )}
+                            </TabsContent>
+                        </Tabs>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

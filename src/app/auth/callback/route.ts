@@ -11,6 +11,18 @@ export async function GET(request: NextRequest) {
         const supabase = await createClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('age_range')
+                    .eq('id', user.id)
+                    .single()
+
+                if (!profile?.age_range) {
+                    return NextResponse.redirect(`${origin}/onboarding`)
+                }
+            }
             return NextResponse.redirect(`${origin}${next}`)
         }
     }

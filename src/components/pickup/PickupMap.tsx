@@ -10,6 +10,7 @@ interface PickupMapProps {
     sessions: any[];
     highlightedGameId?: string | null;
     onMapMove?: (bounds: { north: number, south: number, east: number, west: number }) => void;
+    userLocation?: { latitude: number, longitude: number, zoom: number } | null;
 }
 
 // Los Angeles
@@ -19,7 +20,7 @@ const INITIAL_VIEW_STATE = {
     zoom: 11
 };
 
-export const PickupMap = ({ sessions, highlightedGameId, onMapMove }: PickupMapProps) => {
+export const PickupMap = ({ sessions, highlightedGameId, onMapMove, userLocation }: PickupMapProps) => {
     const [popupInfo, setPopupInfo] = useState<any>(null);
     const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
@@ -80,7 +81,8 @@ export const PickupMap = ({ sessions, highlightedGameId, onMapMove }: PickupMapP
     return (
         <div className="w-full h-full bg-zinc-900 relative">
             <Map
-                initialViewState={INITIAL_VIEW_STATE}
+                key={userLocation ? `${userLocation.latitude}-${userLocation.longitude}` : "default-view"}
+                initialViewState={userLocation || INITIAL_VIEW_STATE}
                 style={{ width: "100%", height: "100%" }}
                 mapStyle="mapbox://styles/mapbox/dark-v11"
                 mapboxAccessToken={mapboxToken}
