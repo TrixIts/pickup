@@ -96,16 +96,21 @@ export const SessionChat = ({ sessionId, seriesId }: SessionChatProps) => {
         const content = newMessage.trim();
         setNewMessage("");
 
-        const { error } = await supabase.from("session_messages").insert({
-            session_id: sessionId,
-            series_id: seriesId,
-            profile_id: currentUser.id,
-            content
+        // Use API route to send message and trigger PUSH notification
+        const res = await fetch("/api/pickup/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                sessionId,
+                seriesId,
+                content
+            })
         });
 
-        if (error) {
-            console.error("Error sending message:", error);
+        if (!res.ok) {
+            console.error("Error sending message:", await res.json());
         }
+        // No need to manually add to state, as the realtime subscription will handle it.
     };
 
     if (loading) {

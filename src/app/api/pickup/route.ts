@@ -48,6 +48,8 @@ export async function GET() {
 }
 
 
+// ... (previous imports)
+
 export async function POST(req: Request) {
     try {
         const supabase = await createClient();
@@ -68,55 +70,59 @@ export async function POST(req: Request) {
         }
 
         // Handle Host ID
-        // Note: In a real app, strict RLS would require the authenticated user to matches hostId
-        // or we just use the auth.uid() from the session. 
-        // For now, if hostId is "placeholder-user-id" or similar, we might need a fallback or let it fail if not nullable.
-        // However, we want to allow the "Demo" to work.
-        // If we can't find a user, we might create a guest session if allowed, or we must require a valid UUID.
-        // Let's assume for this "Basics" setup, the user might not be logged in. 
-        // We will try to fetch the current user.
         const { data: { user } } = await supabase.auth.getUser();
         let finalHostId = user?.id || hostId;
 
-        // If still placeholder/invalid, we cannot insert into a foreign key constrained column.
-        // But for the sake of the setup not crashing on "Create Game" when not logged in (if that's the flow),
-        // we should error out or handle it.
-        // For now, we'll try to insert. If it fails, we catch the error.
+        // Recurrence Logic
+        const seriesId = isRecurring ? crypto.randomUUID() : null;
+        const sessionsToCreate = isRecurring ? 4 : 1;
+        const createdSessions = [];
 
-        const { data: session, error } = await supabase
-            .from('pickup_sessions')
-            .insert({
-                title,
-                sport_id: finalSportId,
-                host_id: finalHostId === 'placeholder-user-id' ? null : finalHostId, // Try null if placeholder, if schema allows. If not, it will error.
-                location,
-                start_time: new Date(startTime).toISOString(),
-                player_limit: parseInt(playerLimit),
-                fee: parseFloat(fee),
-                description,
-                latitude,
-                longitude,
-                is_recurring: isRecurring,
-                series_id: isRecurring ? crypto.randomUUID() : null
-            })
-            .select()
-            .single();
+        let baseDate = new Date(startTime);
 
-        if (error) {
-            console.error("Supabase insert error:", error);
-            return NextResponse.json({ error: error.message }, { status: 400 });
+        for (let i = 0; i < sessionsToCreate; i++) {
+            const currentStartTime = new Date(baseDate);
+            currentStartTime.setDate(baseDate.getDate() + (i * 7));
+
+            const { data: session, error } = await supabase
+                .from('pickup_sessions')
+                .insert({
+                    title,
+                    sport_id: finalSportId,
+                    host_id: finalHostId === 'placeholder-user-id' ? null : finalHostId,
+                    location,
+                    start_time: currentStartTime.toISOString(),
+                    player_limit: parseInt(playerLimit),
+                    fee: parseFloat(fee),
+                    description,
+                    latitude,
+                    longitude,
+                    is_recurring: isRecurring,
+                    series_id: seriesId
+                })
+                .select()
+                .single();
+
+            if (error) {
+                console.error("Supabase insert error:", error);
+                // If one fails, we stop? Or continue? For now, we'll return error.
+                // In a real app we might want a transaction.
+                return NextResponse.json({ error: error.message }, { status: 400 });
+            }
+
+            createdSessions.push(session);
+
+            // Add Host as SessionPlayer with OWNER role for EACH session
+            if (finalHostId && finalHostId !== 'placeholder-user-id') {
+                await supabase.from('pickup_session_players').insert({
+                    session_id: session.id,
+                    profile_id: finalHostId,
+                    role: 'OWNER'
+                });
+            }
         }
 
-        // Add Host as SessionPlayer with OWNER role
-        if (finalHostId && finalHostId !== 'placeholder-user-id') {
-            await supabase.from('pickup_session_players').insert({
-                session_id: session.id,
-                profile_id: finalHostId,
-                role: 'OWNER'
-            });
-        }
-
-        return NextResponse.json(session);
+        return NextResponse.json(createdSessions[0]); // Return the first one for redirection
     } catch (error: any) {
         console.error("Failed to create session:", error);
         return NextResponse.json({ error: error.message || "Failed to create session" }, { status: 500 });

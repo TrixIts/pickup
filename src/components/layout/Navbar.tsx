@@ -14,7 +14,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User as UserIcon, Calendar, Trophy, MapPin } from "lucide-react";
+import { LogOut, User as UserIcon, Calendar, Trophy, MapPin, Shield } from "lucide-react";
+import { NotificationsBell } from "@/components/layout/NotificationsBell";
 
 // Navbar component
 export const Navbar = () => {
@@ -76,42 +77,53 @@ export const Navbar = () => {
 
             <div className="flex items-center gap-4">
                 {user ? (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                                <Avatar className="h-10 w-10 border border-zinc-700">
-                                    <AvatarImage src={profile?.avatar_url} alt={profile?.first_name} />
-                                    <AvatarFallback className="bg-zinc-800 text-zinc-400 font-bold">
-                                        {profile?.first_name?.[0]}{profile?.last_name?.[0]}
-                                    </AvatarFallback>
-                                </Avatar>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56 bg-zinc-950 border-zinc-800 text-white" align="end" forceMount>
-                            <DropdownMenuLabel className="font-normal">
-                                <div className="flex flex-col space-y-1">
-                                    <p className="text-sm font-bold leading-none">{profile?.first_name} {profile?.last_name}</p>
-                                    <p className="text-xs leading-none text-zinc-400">{user.email}</p>
-                                </div>
-                            </DropdownMenuLabel>
-                            <DropdownMenuSeparator className="bg-zinc-800" />
-                            <DropdownMenuItem asChild className="focus:bg-zinc-900 focus:text-emerald-500 cursor-pointer">
-                                <Link href="/dashboard">
-                                    <UserIcon className="mr-2 h-4 w-4" />
-                                    Profile & Dashboard
-                                </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem disabled className="focus:bg-zinc-900 focus:text-white opacity-50">
-                                <Trophy className="mr-2 h-4 w-4" />
-                                League Stats (Coming Soon)
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-zinc-800" />
-                            <DropdownMenuItem className="focus:bg-red-900/20 focus:text-red-500 cursor-pointer text-red-500" onClick={handleSignOut}>
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Log out
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <>
+                        <NotificationsBell />
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                                    <Avatar className="h-10 w-10 border border-zinc-700">
+                                        <AvatarImage src={profile?.avatar_url} alt={profile?.first_name} />
+                                        <AvatarFallback className="bg-zinc-800 text-zinc-400 font-bold">
+                                            {profile?.first_name?.[0]}{profile?.last_name?.[0]}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56 bg-zinc-950 border-zinc-800 text-white" align="end" forceMount>
+                                <DropdownMenuLabel className="font-normal">
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-bold leading-none">{profile?.first_name} {profile?.last_name}</p>
+                                        <p className="text-xs leading-none text-zinc-400">{user.email}</p>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator className="bg-zinc-800" />
+                                <DropdownMenuItem asChild className="focus:bg-zinc-900 focus:text-emerald-500 cursor-pointer">
+                                    <Link href="/dashboard">
+                                        <UserIcon className="mr-2 h-4 w-4" />
+                                        Profile & Dashboard
+                                    </Link>
+                                </DropdownMenuItem>
+                                {profile?.is_admin && (
+                                    <DropdownMenuItem asChild className="focus:bg-zinc-900 focus:text-red-500 cursor-pointer">
+                                        <Link href="/admin">
+                                            <Shield className="mr-2 h-4 w-4" />
+                                            Admin Dashboard
+                                        </Link>
+                                    </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem disabled className="focus:bg-zinc-900 focus:text-white opacity-50">
+                                    <Trophy className="mr-2 h-4 w-4" />
+                                    League Stats (Coming Soon)
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator className="bg-zinc-800" />
+                                <DropdownMenuItem className="focus:bg-red-900/20 focus:text-red-500 cursor-pointer text-red-500" onClick={handleSignOut}>
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Log out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </>
                 ) : (
                     <div className="flex items-center gap-4">
                         <Link href="/login" className="text-sm font-bold text-zinc-400 hover:text-white">

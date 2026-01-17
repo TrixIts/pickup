@@ -13,8 +13,17 @@ import {
     Trophy,
     UserPlus,
     CheckCircle2,
-    MessageSquare
+    MessageSquare,
+    Pencil
 } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { LocationSearch } from "@/components/pickup/LocationSearch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SessionChat } from "@/components/pickup/SessionChat";
@@ -27,6 +36,14 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
     const [joining, setJoining] = useState(false);
     const [isJoined, setIsJoined] = useState(false);
     const [currentUser, setCurrentUser] = useState<any>(null);
+    const [isOwner, setIsOwner] = useState(false);
+
+    // Edit Location State
+    const [editLocationOpen, setEditLocationOpen] = useState(false);
+    const [newLocation, setNewLocation] = useState("");
+    const [newLat, setNewLat] = useState<number | null>(null);
+    const [newLng, setNewLng] = useState<number | null>(null);
+    const [updatingLocation, setUpdatingLocation] = useState(false);
 
     const supabase = createClient();
     const router = useRouter();
@@ -52,6 +69,10 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                 setSession(data);
                 if (userData.user) {
                     setIsJoined(data.players.some((p: any) => p.profile_id === userData.user.id));
+                    setIsOwner(data.host_id === userData.user.id);
+                    setNewLocation(data.location);
+                    setNewLat(data.latitude);
+                    setNewLng(data.longitude);
                 }
             }
             setLoading(false);
@@ -96,6 +117,34 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
             console.error(error);
         } finally {
             setJoining(false);
+        }
+    };
+
+    const handleUpdateLocation = async () => {
+        setUpdatingLocation(true);
+        try {
+            const res = await fetch(`/api/pickup/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    location: newLocation,
+                    latitude: newLat,
+                    longitude: newLng
+                })
+            });
+
+            if (res.ok) {
+                setSession((prev: any) => ({ ...prev, location: newLocation, latitude: newLat, longitude: newLng }));
+                setEditLocationOpen(false);
+            } else {
+                const err = await res.json();
+                alert(err.error || "Failed to update location");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Failed to update");
+        } finally {
+            setUpdatingLocation(false);
         }
     };
 
@@ -160,18 +209,40 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                     <div className="lg:col-span-2 space-y-8">
                         {/* Info Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {[
-                                { icon: Calendar, label: "Date", value: new Date(session.start_time).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' }) },
-                                { icon: Clock, label: "Time", value: new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
-                                { icon: MapPin, label: "Location", value: session.location },
-                                { icon: Users, label: "Capacity", value: `${session.players?.length || 0} / ${session.player_limit || "∞"}` }
-                            ].map((item, i) => (
-                                <div key={i} className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 hover:border-zinc-800 transition-colors">
-                                    <item.icon className="h-5 w-5 text-emerald-500 mb-3" />
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1">{item.label}</p>
-                                    <p className="font-bold text-sm truncate">{item.value}</p>
+                            <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 hover:border-zinc-800 transition-colors">
+                                <Calendar className="h-5 w-5 text-emerald-500 mb-3" />
+                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1">Date</p>
+                                <p className="font-bold text-sm truncate">
+                                    {new Date(session.start_time).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
+                                </p>
+                            </div>
+                            <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 hover:border-zinc-800 transition-colors">
+                                <Clock className="h-5 w-5 text-emerald-500 mb-3" />
+                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1">Time</p>
+                                <p className="font-bold text-sm truncate">
+                                    {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                            </div>
+                            <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 hover:border-zinc-800 transition-colors group relative">
+                                <MapPin className="h-5 w-5 text-emerald-500 mb-3" />
+                                <div className="flex justify-between items-center">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1">Location</p>
+                                    {isOwner && (
+                                        <button
+                                            onClick={() => setEditLocationOpen(true)}
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white"
+                                        >
+                                            <Pencil className="h-3 w-3" />
+                                        </button>
+                                    )}
                                 </div>
-                            ))}
+                                <p className="font-bold text-sm truncate" title={session.location}>{session.location}</p>
+                            </div>
+                            <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 hover:border-zinc-800 transition-colors">
+                                <Users className="h-5 w-5 text-emerald-500 mb-3" />
+                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1">Capacity</p>
+                                <p className="font-bold text-sm truncate">{session.players?.length || 0} / {session.player_limit || "∞"}</p>
+                            </div>
                         </div>
 
                         {/* Description */}
@@ -279,6 +350,30 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                     </div>
                 </div>
             </main>
+
+            <Dialog open={editLocationOpen} onOpenChange={setEditLocationOpen}>
+                <DialogContent className="bg-zinc-950 border-zinc-800 text-white sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Update Location</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <LocationSearch
+                            defaultValue={newLocation}
+                            onSelectLocation={(loc, lat, lng) => {
+                                setNewLocation(loc);
+                                setNewLat(lat);
+                                setNewLng(lng);
+                            }}
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setEditLocationOpen(false)}>Cancel</Button>
+                        <Button onClick={handleUpdateLocation} disabled={updatingLocation} className="bg-emerald-500 text-black font-bold">
+                            {updatingLocation ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
