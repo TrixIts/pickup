@@ -32,14 +32,16 @@ export const ProfileSettings = ({ isOpen, onClose }: { isOpen: boolean, onClose:
 
     const handleUpdate = async () => {
         setLoading(true);
-        const { error } = await supabase.from('profiles').update({
+        const { error } = await supabase.from('profiles').upsert({
+            id: profile.id,
             first_name: profile.first_name,
             last_name: profile.last_name,
             age_range: profile.age_range,
             gender: profile.gender,
             avatar_url: previewUrl || profile.avatar_url,
-            commute_radius: parseInt(profile.commute_radius)
-        }).eq('id', profile.id);
+            commute_radius: parseInt(profile.commute_radius),
+            updated_at: new Date().toISOString()
+        });
 
         setLoading(false);
         if (!error) {

@@ -58,11 +58,22 @@ export const Onboarding = () => {
     const router = useRouter();
 
     useEffect(() => {
-        const fetchSports = async () => {
+        const init = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // Pre-populate names from Google/OAuth metadata if possible
+                const meta = user.user_metadata;
+                setFormData(prev => ({
+                    ...prev,
+                    firstName: prev.firstName || meta?.full_name?.split(" ")[0] || meta?.first_name || "",
+                    lastName: prev.lastName || meta?.full_name?.split(" ").slice(1).join(" ") || meta?.last_name || "",
+                }));
+            }
+
             const { data } = await supabase.from("sports").select("*");
             if (data) setSports(data);
         };
-        fetchSports();
+        init();
     }, []);
 
     const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
@@ -119,8 +130,10 @@ export const Onboarding = () => {
 
         if (!user) return;
 
-        // 1. Update Profile
-        const { error: profileError } = await supabase.from("profiles").update({
+        // 1. Upsert Profile (to handle cases where trigger didn't create it)
+        const { error: profileError } = await supabase.from("profiles").upsert({
+            id: user.id,
+            email: user.email,
             first_name: formData.firstName,
             last_name: formData.lastName,
             age_range: formData.ageRange,
@@ -131,10 +144,12 @@ export const Onboarding = () => {
             commute_radius: formData.commuteRadius,
             interested_in_leagues: formData.interestedInLeagues,
             avatar_url: formData.avatarUrl,
-        }).eq("id", user.id);
+            updated_at: new Date().toISOString()
+        });
 
         if (profileError) {
             console.error("Profile update error:", profileError);
+            alert("Error saving profile: " + profileError.message);
             setLoading(false);
             return;
         }
@@ -153,6 +168,7 @@ export const Onboarding = () => {
             if (skillError) console.error("Skill insert error:", skillError);
         }
 
+        setLoading(false);
         router.push("/pickup");
         router.refresh();
     };
@@ -496,7 +512,16 @@ export const Onboarding = () => {
 
                 {currentStep === STEPS.length - 1 ? (
                     <Button
-                        onClick={handleSave}
+                        onClick={async () => {
+                            if (!formData.ageRange || !formData.gender || !formData.firstName) {
+                                alert("Please make sure your first name, age range, and gender are set.");
+                                // Find step to go back to if needed
+                                if (!formData.firstName) setCurrentStep(0);
+                                else if (!formData.ageRange || !formData.gender) setCurrentStep(1);
+                                return;
+                            }
+                            await handleSave();
+                        }}
                         disabled={loading}
                         className="bg-emerald-500 text-black font-black px-8 py-6 rounded-2xl hover:bg-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
                     >
@@ -513,6 +538,6 @@ export const Onboarding = () => {
                     </Button>
                 )}
             </div>
-        </div>
+        </div >
     );
 };

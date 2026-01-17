@@ -19,7 +19,9 @@ export async function GET(request: NextRequest) {
                     .eq('id', user.id)
                     .single()
 
-                if (!profile?.age_range) {
+                // Check if user has completed onboarding (age_range is our proxy for this)
+                if (!profile?.age_range || profile.age_range === "") {
+                    console.log("Onboarding incomplete, redirecting...");
                     return NextResponse.redirect(`${origin}/onboarding`)
                 }
             }

@@ -36,7 +36,7 @@ export default function PickupPage() {
                     .eq("id", user.id)
                     .single();
 
-                if (!profile?.age_range) {
+                if (!profile?.age_range || profile.age_range === "") {
                     router.push("/onboarding");
                     return;
                 }
