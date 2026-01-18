@@ -9,26 +9,37 @@ export async function GET(request: NextRequest) {
 
     if (code) {
         const supabase = await createClient()
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (!error) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+
+        if (!exchangeError) {
             const { data: { user } } = await supabase.auth.getUser()
+
             if (user) {
-                const { data: profile } = await supabase
+                // Check if profile is complete
+                const { data: profile, error: profileError } = await supabase
                     .from('profiles')
                     .select('age_range')
                     .eq('id', user.id)
                     .single()
 
-                // Check if user has completed onboarding (age_range is our proxy for this)
+                if (profileError && profileError.code !== 'PGRST116') {
+                    console.error("Error fetching profile in callback:", profileError);
+                }
+
+                // If onboarding is incomplete, redirect to onboarding
                 if (!profile?.age_range || profile.age_range === "") {
-                    console.log("Onboarding incomplete, redirecting...");
+                    console.log("Onboarding incomplete for user:", user.email);
                     return NextResponse.redirect(`${origin}/onboarding`)
                 }
             }
+
+            // Onboarding complete, go to dashboard or intended page
             return NextResponse.redirect(`${origin}${next}`)
+        } else {
+            console.error("Exchange code error:", exchangeError.message);
         }
     }
 
-    // return the user to an error page with instructions
+    // If no code or error during exchange, fallback to error page
     return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }
