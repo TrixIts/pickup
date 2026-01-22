@@ -72,6 +72,13 @@ export const Navbar = () => {
                         <Calendar className="h-4 w-4" />
                         Dashboard
                     </Link>
+                    <Link
+                        href="/admin/leagues"
+                        className={`transition-colors flex items-center gap-2 ${isActive('/admin/leagues') ? 'text-emerald-500' : 'text-zinc-400 hover:text-white'}`}
+                    >
+                        <Trophy className="h-4 w-4" />
+                        Organize
+                    </Link>
                 </div>
             </div>
 
@@ -104,6 +111,12 @@ export const Navbar = () => {
                                         Profile & Dashboard
                                     </Link>
                                 </DropdownMenuItem>
+                                <DropdownMenuItem asChild className="focus:bg-zinc-900 focus:text-emerald-500 cursor-pointer">
+                                    <Link href="/admin/leagues">
+                                        <Trophy className="mr-2 h-4 w-4" />
+                                        My Leagues
+                                    </Link>
+                                </DropdownMenuItem>
                                 {profile?.is_admin && (
                                     <DropdownMenuItem asChild className="focus:bg-zinc-900 focus:text-red-500 cursor-pointer">
                                         <Link href="/admin">
@@ -112,10 +125,6 @@ export const Navbar = () => {
                                         </Link>
                                     </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem disabled className="focus:bg-zinc-900 focus:text-white opacity-50">
-                                    <Trophy className="mr-2 h-4 w-4" />
-                                    League Stats (Coming Soon)
-                                </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-zinc-800" />
                                 <DropdownMenuItem className="focus:bg-red-900/20 focus:text-red-500 cursor-pointer text-red-500" onClick={handleSignOut}>
                                     <LogOut className="mr-2 h-4 w-4" />
