@@ -30,7 +30,7 @@ export async function POST(req: Request) {
         // 3. Fetch Session Details (including Sport ID and Level)
         const { data: session } = await supabase
             .from("pickup_sessions")
-            .select("sport_id, level, player_limit, players:pickup_session_players(count)")
+            .select("sport_id, level, player_limit, series_id, players:pickup_session_players(count)")
             .eq("id", sessionId)
             .single();
 
@@ -105,6 +105,37 @@ export async function POST(req: Request) {
                 session_id: sessionId,
                 profile_id: user.id
             });
+
+        if (joinError) throw joinError;
+
+        // 8. Handle Recurring Series Join
+        // If this session is part of a series, join automatically for all FUTURE sessions in the same series
+        // (We don't join past ones, obviously)
+        if (session.series_id) {
+            const { data: futureSessions } = await supabase
+                .from("pickup_sessions")
+                .select("id")
+                .eq("series_id", session.series_id)
+                .neq("id", sessionId) // Don't try to join the current one again
+                .gt("start_time", new Date().toISOString());
+
+            if (futureSessions && futureSessions.length > 0) {
+                const multiJoinData = futureSessions.map(s => ({
+                    session_id: s.id,
+                    profile_id: user.id
+                }));
+
+                // Use upsert to avoid errors if they already somehow joined another one in the series independently
+                const { error: multiJoinError } = await supabase
+                    .from("pickup_session_players")
+                    .upsert(multiJoinData, { onConflict: 'session_id, profile_id', ignoreDuplicates: true });
+
+                if (multiJoinError) {
+                    console.error("Failed to auto-join series:", multiJoinError);
+                    // We don't fail the whole request, just log it. The primary join succeeded.
+                }
+            }
+        }
 
         if (joinError) throw joinError;
 

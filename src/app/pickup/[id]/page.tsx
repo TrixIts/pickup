@@ -14,7 +14,8 @@ import {
     UserPlus,
     CheckCircle2,
     MessageSquare,
-    Pencil
+    Pencil,
+    Repeat
 } from "lucide-react";
 import {
     Dialog,
@@ -196,6 +197,11 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                         <Badge variant="outline" className="border-emerald-500/50 text-emerald-500 font-bold bg-emerald-500/5">
                             {session.fee === 0 ? "Free To Play" : `$${session.fee} Entry`}
                         </Badge>
+                        {session.is_recurring && (
+                            <Badge variant="secondary" className="bg-zinc-800 text-zinc-300 border-zinc-700 font-bold gap-1">
+                                <Repeat className="h-3 w-3" /> Recurring
+                            </Badge>
+                        )}
                     </div>
                     <h1 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">
                         {session.title}

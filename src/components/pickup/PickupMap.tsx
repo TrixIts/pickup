@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
-import { MapPin, Info } from "lucide-react";
+import { MapPin, Info, Repeat } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -158,6 +158,11 @@ export const PickupMap = ({ sessions, highlightedGameId, onMapMove, userLocation
                                 </span>
                             </div>
                             <h3 className="font-bold text-sm mb-1">{popupInfo.title}</h3>
+                            {popupInfo.is_recurring && (
+                                <div className="flex items-center gap-1 text-[10px] text-zinc-500 mb-1">
+                                    <Repeat className="h-3 w-3" /> Recurring
+                                </div>
+                            )}
                             <p className="text-xs text-zinc-500 mb-3">{popupInfo.location}</p>
                             <Button asChild size="sm" className="w-full h-8 bg-black text-white hover:bg-zinc-800">
                                 <Link href={`/pickup/${popupInfo.id}`}>

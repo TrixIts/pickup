@@ -6,7 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MapPin, Clock, ArrowRight, Trophy, Users, Loader2 } from "lucide-react";
+import { Calendar, MapPin, Clock, ArrowRight, Trophy, Users, Loader2, Repeat } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { ProfileSettings } from "@/components/profile/ProfileSettings";
@@ -202,6 +202,12 @@ function GameCard({ game, isPast }: { game: any, isPast?: boolean }) {
                         {new Date(game.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                 </div>
+                {game.is_recurring && (
+                    <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium">
+                        <Repeat className="h-3 w-3 text-emerald-500" />
+                        <span>Recurring Series</span>
+                    </div>
+                )}
 
                 <div>
                     <h3 className="text-xl font-black uppercase tracking-tight mb-1">{game.title}</h3>
@@ -234,6 +240,6 @@ function GameCard({ game, isPast }: { game: any, isPast?: boolean }) {
                     </Link>
                 </Button>
             </div>
-        </div>
+        </div >
     );
 }

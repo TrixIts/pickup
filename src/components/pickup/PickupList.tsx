@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Calendar, Clock, Users, Loader2, ChevronRight } from "lucide-react";
+import { Search, MapPin, Calendar, Clock, Users, Loader2, ChevronRight, Repeat } from "lucide-react";
 import Link from "next/link";
 
 interface PickupListProps {
@@ -86,6 +86,11 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
                                     <h3 className="text-white font-bold text-lg group-hover:text-emerald-400 transition-colors">
                                         {game.title}
                                     </h3>
+                                    {game.is_recurring && (
+                                        <div className="flex items-center gap-1 text-[10px] text-zinc-400 mt-1">
+                                            <Repeat className="h-3 w-3" /> Recurring Series
+                                        </div>
+                                    )}
                                 </div>
                                 <Badge className="bg-zinc-800 text-zinc-300 border-none">
                                     {game.fee === 0 || game.fee === "0" ? "Free" : `$${game.fee}`}

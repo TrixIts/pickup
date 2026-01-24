@@ -109,6 +109,8 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...formData,
+                    // Ensure the time is sent as a proper ISO string (UTC) derived from the user's local selection
+                    startTime: new Date(formData.startTime).toISOString(),
                     hostId: userId || "placeholder-user-id"
                 })
             });
