@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
     const next = searchParams.get('next') ?? '/dashboard'
+    const returnTo = searchParams.get('returnTo')
 
     if (code) {
         const supabase = await createClient()
@@ -26,10 +27,15 @@ export async function GET(request: NextRequest) {
                     console.error("Error fetching profile in callback:", profileError);
                 }
 
-                // If onboarding is incomplete, redirect to onboarding
+                // If onboarding is incomplete, redirect to onboarding with returnTo
                 if (!profile?.age_range || profile.age_range === "") {
                     console.log("Onboarding incomplete for user:", user.email);
-                    return NextResponse.redirect(`${origin}/onboarding`)
+                    const onboardingUrl = returnTo
+                        ? `/onboarding?returnTo=${encodeURIComponent(returnTo)}`
+                        : next !== '/dashboard'
+                            ? `/onboarding?returnTo=${encodeURIComponent(next)}`
+                            : '/onboarding';
+                    return NextResponse.redirect(`${origin}${onboardingUrl}`)
                 }
             }
 

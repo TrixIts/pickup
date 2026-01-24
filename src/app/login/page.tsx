@@ -28,6 +28,7 @@ function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isSignUp, setIsSignUp] = useState(searchParams.get("signup") === "true");
+    const returnTo = searchParams.get("returnTo") || "/dashboard";
     const supabase = createClient();
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -44,7 +45,7 @@ function LoginPage() {
             setError(error.message);
             setLoading(false);
         } else {
-            router.push("/dashboard");
+            router.push(returnTo);
             router.refresh();
         }
     };
@@ -54,11 +55,13 @@ function LoginPage() {
         setLoading(true);
         setError(null);
 
+        const returnParam = returnTo !== "/dashboard" ? `?returnTo=${encodeURIComponent(returnTo)}` : "";
+
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
-                emailRedirectTo: `${location.origin}/auth/callback`,
+                emailRedirectTo: `${location.origin}/auth/callback${returnParam}`,
             },
         });
 
@@ -67,7 +70,8 @@ function LoginPage() {
             setLoading(false);
         } else if (data.session) {
             // Email confirmation is disabled, auto-login successful
-            router.push("/onboarding");
+            // New users need onboarding, pass the returnTo
+            router.push(`/onboarding${returnParam}`);
             router.refresh();
         } else {
             setError("Check your email for a confirmation link. To skip this, disable 'Confirm email' in your Supabase Auth settings.");
@@ -145,7 +149,7 @@ function LoginPage() {
                         const { error } = await supabase.auth.signInWithOAuth({
                             provider: 'google',
                             options: {
-                                redirectTo: `${location.origin}/auth/callback?next=/dashboard`,
+                                redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`,
                                 queryParams: {
                                     access_type: 'offline',
                                     prompt: 'consent',

@@ -21,7 +21,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Loader2, Check, Search, MapPin as MapPinIcon } from "lucide-react";
 import { LocationSearch } from "@/components/pickup/LocationSearch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -132,15 +131,15 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[500px] bg-zinc-950 border-zinc-800 text-white">
-                <DialogHeader>
+            <DialogContent className="sm:max-w-[500px] max-h-[100dvh] sm:max-h-[90vh] overflow-hidden flex flex-col bg-zinc-950 border-zinc-800 text-white p-0 gap-0">
+                <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b border-zinc-800/50">
                     <DialogTitle className="text-2xl font-black tracking-tighter uppercase">Host a Game</DialogTitle>
                     <DialogDescription className="text-zinc-500">
                         Fill out the details below to list your pickup session.
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="grid gap-6 py-4">
+                <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5 overscroll-contain">
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="sport" className="text-zinc-400">Sport</Label>
@@ -278,13 +277,11 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                     </div>
                 </div>
 
-                <Separator className="bg-zinc-800" />
-
-                <DialogFooter className="sm:justify-between items-center bg-zinc-950/50 -mx-6 -mb-6 p-6 rounded-b-lg">
-                    <div className="text-sm text-zinc-500">
+                <DialogFooter className="shrink-0 flex-col sm:flex-row sm:justify-between items-stretch sm:items-center gap-3 border-t border-zinc-800 px-6 py-4 bg-zinc-950/80 backdrop-blur-sm pb-safe">
+                    <div className="text-sm text-zinc-500 text-center sm:text-left">
                         Est. Fee per player: <span className="text-emerald-500 font-bold">${formData.fee}.00</span>
                     </div>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 justify-end">
                         <Button variant="ghost" onClick={onClose} disabled={loading} className="hover:bg-zinc-900">Cancel</Button>
                         <Button
                             onClick={handleSubmit}

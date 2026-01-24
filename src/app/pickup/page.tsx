@@ -106,7 +106,7 @@ export default function PickupPage() {
                 </div>
                 <Button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold gap-2 px-6"
+                    className="hidden md:flex rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold gap-2 px-6"
                 >
                     <Plus className="h-4 w-4" />
                     Create Game

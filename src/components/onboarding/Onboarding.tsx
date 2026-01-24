@@ -18,7 +18,7 @@ import {
     Upload
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LocationSearch } from "@/components/pickup/LocationSearch";
 
 const STEPS = [
@@ -56,6 +56,8 @@ export const Onboarding = () => {
 
     const supabase = createClient();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const returnTo = searchParams.get("returnTo") || "/pickup";
 
     useEffect(() => {
         const init = async () => {
@@ -169,7 +171,7 @@ export const Onboarding = () => {
         }
 
         setLoading(false);
-        router.push("/pickup");
+        router.push(returnTo);
         router.refresh();
     };
 

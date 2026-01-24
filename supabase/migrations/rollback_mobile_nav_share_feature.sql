@@ -1,0 +1,28 @@
+-- Rollback script for mobile navigation and share feature changes
+-- This file is for reference only - no database changes were made in this update
+-- All changes were frontend-only
+
+-- The following files were created/modified:
+-- 
+-- NEW FILES:
+-- - src/components/layout/MobileNav.tsx (Mobile bottom navigation component)
+-- - src/components/pickup/ShareGameModal.tsx (Share game modal component)
+-- - src/app/join/[id]/page.tsx (Join game page for shared links)
+--
+-- MODIFIED FILES:
+-- - src/app/layout.tsx (Added MobileNav component)
+-- - src/app/login/page.tsx (Added returnTo parameter handling)
+-- - src/app/auth/callback/route.ts (Added returnTo parameter handling)
+-- - src/app/onboarding/page.tsx (Added Suspense wrapper)
+-- - src/app/pickup/page.tsx (Hidden Create button on mobile)
+-- - src/app/pickup/[id]/page.tsx (Added Share button and modal)
+-- - src/components/onboarding/Onboarding.tsx (Added returnTo parameter handling)
+-- - src/components/pickup/CreatePickupModal.tsx (Mobile-optimized scrolling)
+-- - src/app/globals.css (Added safe area utilities)
+--
+-- To rollback these changes, you can:
+-- 1. Revert the git commits
+-- 2. Delete the new files listed above
+-- 3. Restore the modified files from version control
+
+-- No database schema changes were made.

@@ -2,6 +2,7 @@
 
 import { Onboarding } from "@/components/onboarding/Onboarding";
 import { Trophy } from "lucide-react";
+import { Suspense } from "react";
 
 export default function OnboardingPage() {
     return (
@@ -25,7 +26,9 @@ export default function OnboardingPage() {
                 </div>
 
                 <div className="w-full max-w-2xl bg-zinc-950/50 backdrop-blur-xl border border-zinc-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
-                    <Onboarding />
+                    <Suspense fallback={<div className="text-center py-12 text-zinc-500">Loading...</div>}>
+                        <Onboarding />
+                    </Suspense>
                 </div>
 
                 <p className="mt-12 text-zinc-500 text-xs font-medium tracking-widest uppercase">

@@ -15,7 +15,8 @@ import {
     CheckCircle2,
     MessageSquare,
     Pencil,
-    Repeat
+    Repeat,
+    Share2
 } from "lucide-react";
 import {
     Dialog,
@@ -28,6 +29,7 @@ import { LocationSearch } from "@/components/pickup/LocationSearch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SessionChat } from "@/components/pickup/SessionChat";
+import { ShareGameModal } from "@/components/pickup/ShareGameModal";
 import Link from "next/link";
 
 export default function SessionDetailsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -45,6 +47,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
     const [newLat, setNewLat] = useState<number | null>(null);
     const [newLng, setNewLng] = useState<number | null>(null);
     const [updatingLocation, setUpdatingLocation] = useState(false);
+    const [shareModalOpen, setShareModalOpen] = useState(false);
 
     const supabase = createClient();
     const router = useRouter();
@@ -180,12 +183,20 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                 </div>
 
-                <div className="absolute top-8 left-8">
+                <div className="absolute top-8 left-8 right-8 flex justify-between items-start">
                     <Button asChild variant="ghost" className="bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60">
                         <Link href="/pickup">
                             <ChevronLeft className="h-4 w-4 mr-2" />
                             Back
                         </Link>
+                    </Button>
+                    <Button
+                        onClick={() => setShareModalOpen(true)}
+                        variant="ghost"
+                        className="bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60 gap-2"
+                    >
+                        <Share2 className="h-4 w-4" />
+                        <span className="hidden sm:inline">Invite</span>
                     </Button>
                 </div>
 
@@ -380,6 +391,15 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <ShareGameModal
+                isOpen={shareModalOpen}
+                onClose={() => setShareModalOpen(false)}
+                gameId={id}
+                gameTitle={session.title}
+                sportName={session.sport?.name}
+                startTime={session.start_time}
+            />
         </div>
     );
 }
