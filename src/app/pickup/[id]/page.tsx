@@ -18,7 +18,10 @@ import {
     Repeat,
     Share2,
     CalendarPlus,
-    CalendarRange
+    CalendarRange,
+    CircleCheck,
+    CircleX,
+    CircleHelp
 } from "lucide-react";
 import {
     Dialog,
@@ -55,6 +58,10 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
     // Join Choice Modal State (for recurring sessions)
     const [joinChoiceOpen, setJoinChoiceOpen] = useState(false);
 
+    // Confirmation State
+    const [confirmationStatus, setConfirmationStatus] = useState<'pending' | 'confirmed' | 'declined' | 'maybe'>('pending');
+    const [updatingConfirmation, setUpdatingConfirmation] = useState(false);
+
     const supabase = createClient();
     const router = useRouter();
 
@@ -78,11 +85,25 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
             if (data) {
                 setSession(data);
                 if (userData.user) {
-                    setIsJoined(data.players.some((p: any) => p.profile_id === userData.user.id));
+                    const userIsJoined = data.players.some((p: any) => p.profile_id === userData.user.id);
+                    setIsJoined(userIsJoined);
                     setIsOwner(data.host_id === userData.user.id);
                     setNewLocation(data.location);
                     setNewLat(data.latitude);
                     setNewLng(data.longitude);
+
+                    // Fetch confirmation status if joined
+                    if (userIsJoined) {
+                        try {
+                            const confirmRes = await fetch(`/api/pickup/confirm?sessionId=${id}`);
+                            if (confirmRes.ok) {
+                                const confirmData = await confirmRes.json();
+                                setConfirmationStatus(confirmData.status || 'pending');
+                            }
+                        } catch (e) {
+                            console.error("Failed to fetch confirmation status:", e);
+                        }
+                    }
                 }
             }
             setLoading(false);
@@ -141,6 +162,29 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
             console.error(error);
         } finally {
             setJoining(false);
+        }
+    };
+
+    // Update confirmation status
+    const handleUpdateConfirmation = async (status: 'confirmed' | 'declined' | 'maybe') => {
+        setUpdatingConfirmation(true);
+        try {
+            const res = await fetch('/api/pickup/confirm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sessionId: id, status }),
+            });
+
+            if (res.ok) {
+                setConfirmationStatus(status);
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to update confirmation');
+            }
+        } catch (error) {
+            console.error('Confirmation update error:', error);
+        } finally {
+            setUpdatingConfirmation(false);
         }
     };
 
@@ -364,6 +408,67 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                                 )}
                             </Button>
                         </div>
+
+                        {/* Confirmation Card - Only shows when joined */}
+                        {isJoined && (
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-[2rem] p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <Calendar className="h-5 w-5 text-emerald-500" />
+                                    <div>
+                                        <h4 className="font-bold text-white text-sm">Confirm Your Attendance</h4>
+                                        <p className="text-xs text-zinc-500">
+                                            {new Date(session.start_time).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })} at {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2">
+                                    <button
+                                        onClick={() => handleUpdateConfirmation('confirmed')}
+                                        disabled={updatingConfirmation}
+                                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all ${confirmationStatus === 'confirmed'
+                                                ? 'bg-emerald-500 text-black'
+                                                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                            }`}
+                                    >
+                                        <CircleCheck className={`h-5 w-5 ${confirmationStatus === 'confirmed' ? 'text-black' : 'text-emerald-500'}`} />
+                                        <span className="text-xs font-bold">I'm In</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleUpdateConfirmation('maybe')}
+                                        disabled={updatingConfirmation}
+                                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all ${confirmationStatus === 'maybe'
+                                                ? 'bg-amber-500 text-black'
+                                                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                            }`}
+                                    >
+                                        <CircleHelp className={`h-5 w-5 ${confirmationStatus === 'maybe' ? 'text-black' : 'text-amber-500'}`} />
+                                        <span className="text-xs font-bold">Maybe</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleUpdateConfirmation('declined')}
+                                        disabled={updatingConfirmation}
+                                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-all ${confirmationStatus === 'declined'
+                                                ? 'bg-red-500 text-white'
+                                                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                                            }`}
+                                    >
+                                        <CircleX className={`h-5 w-5 ${confirmationStatus === 'declined' ? 'text-white' : 'text-red-500'}`} />
+                                        <span className="text-xs font-bold">Can't</span>
+                                    </button>
+                                </div>
+
+                                {confirmationStatus !== 'pending' && (
+                                    <p className="text-xs text-center text-zinc-500 mt-3">
+                                        {confirmationStatus === 'confirmed' && '✓ You\'re confirmed! We\'ll see you there.'}
+                                        {confirmationStatus === 'maybe' && '🤔 Let us know when you decide!'}
+                                        {confirmationStatus === 'declined' && 'No worries, maybe next time!'}
+                                    </p>
+                                )}
+                            </div>
+                        )}
 
                         {/* Real-time Chat */}
                         <div className="h-[500px]">
