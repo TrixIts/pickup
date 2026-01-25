@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 export async function POST(req: Request) {
     try {
         const supabase = await createClient();
-        const { sessionId } = await req.json();
+        const { sessionId, joinSeries = false } = await req.json();
 
         if (!sessionId) {
             return NextResponse.json({ error: "Session ID is required" }, { status: 400 });
@@ -108,10 +108,8 @@ export async function POST(req: Request) {
 
         if (joinError) throw joinError;
 
-        // 8. Handle Recurring Series Join
-        // If this session is part of a series, join automatically for all FUTURE sessions in the same series
-        // (We don't join past ones, obviously)
-        if (session.series_id) {
+        // 8. Handle Recurring Series Join (only if user chose to join all future sessions)
+        if (joinSeries && session.series_id) {
             const { data: futureSessions } = await supabase
                 .from("pickup_sessions")
                 .select("id")
@@ -139,7 +137,7 @@ export async function POST(req: Request) {
 
         if (joinError) throw joinError;
 
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success: true, joinedSeries: joinSeries && !!session.series_id });
     } catch (error: any) {
         console.error("Join error:", error);
         return NextResponse.json({ error: error.message || "Failed to join session" }, { status: 500 });

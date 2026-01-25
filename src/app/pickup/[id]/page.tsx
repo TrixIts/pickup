@@ -16,7 +16,9 @@ import {
     MessageSquare,
     Pencil,
     Repeat,
-    Share2
+    Share2,
+    CalendarPlus,
+    CalendarRange
 } from "lucide-react";
 import {
     Dialog,
@@ -24,6 +26,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { LocationSearch } from "@/components/pickup/LocationSearch";
 import { Button } from "@/components/ui/button";
@@ -48,6 +51,9 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
     const [newLng, setNewLng] = useState<number | null>(null);
     const [updatingLocation, setUpdatingLocation] = useState(false);
     const [shareModalOpen, setShareModalOpen] = useState(false);
+
+    // Join Choice Modal State (for recurring sessions)
+    const [joinChoiceOpen, setJoinChoiceOpen] = useState(false);
 
     const supabase = createClient();
     const router = useRouter();
@@ -85,17 +91,31 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
         fetchData();
     }, [id, supabase]);
 
-    const handleJoin = async () => {
+    // Handle the initial join button click
+    const handleJoinClick = () => {
         if (!currentUser) {
             router.push("/login");
             return;
         }
 
+        // For recurring sessions, show the choice modal
+        if (session?.is_recurring && session?.series_id) {
+            setJoinChoiceOpen(true);
+        } else {
+            // For non-recurring sessions, join directly
+            handleJoin(false);
+        }
+    };
+
+    // Actual join logic
+    const handleJoin = async (joinSeries: boolean) => {
+        setJoinChoiceOpen(false);
         setJoining(true);
+
         try {
             const res = await fetch("/api/pickup/join", {
                 method: "POST",
-                body: JSON.stringify({ sessionId: id }),
+                body: JSON.stringify({ sessionId: id, joinSeries }),
             });
             const data = await res.json();
 
@@ -322,7 +342,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                             </p>
 
                             <Button
-                                onClick={handleJoin}
+                                onClick={handleJoinClick}
                                 disabled={joining || isJoined}
                                 className={`w-full h-14 rounded-2xl font-black text-lg transition-all ${isJoined
                                     ? "bg-black text-emerald-500 opacity-100"
@@ -358,8 +378,8 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                                         <h4 className="font-bold text-lg text-white">Locker Room Chat</h4>
                                         <p className="text-sm text-zinc-500 mt-2">Join the session to chat with other players and coordinate.</p>
                                     </div>
-                                    <Button onClick={handleJoin} variant="outline" className="border-zinc-800 text-zinc-400 hover:text-white">
-                                        Join to unlocking chat
+                                    <Button onClick={handleJoinClick} variant="outline" className="border-zinc-800 text-zinc-400 hover:text-white">
+                                        Join to unlock chat
                                     </Button>
                                 </div>
                             )}
@@ -400,6 +420,58 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                 sportName={session.sport?.name}
                 startTime={session.start_time}
             />
+
+            {/* Join Choice Modal for Recurring Sessions */}
+            <Dialog open={joinChoiceOpen} onOpenChange={setJoinChoiceOpen}>
+                <DialogContent className="bg-zinc-950 border-zinc-800 text-white sm:max-w-[450px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-black">Join Recurring Game</DialogTitle>
+                        <DialogDescription className="text-zinc-400">
+                            This game happens every week. How would you like to join?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-3">
+                        <button
+                            onClick={() => handleJoin(false)}
+                            className="w-full p-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-left hover:border-emerald-500/50 transition-colors group"
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0 group-hover:bg-emerald-500/10">
+                                    <CalendarPlus className="h-6 w-6 text-zinc-400 group-hover:text-emerald-500" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-white group-hover:text-emerald-400">Just This Week</h4>
+                                    <p className="text-sm text-zinc-500 mt-1">
+                                        Join only the upcoming session on {new Date(session.start_time).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
+                                    </p>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button
+                            onClick={() => handleJoin(true)}
+                            className="w-full p-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-left hover:border-emerald-500/50 transition-colors group"
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-zinc-800 flex items-center justify-center shrink-0 group-hover:bg-emerald-500/10">
+                                    <CalendarRange className="h-6 w-6 text-zinc-400 group-hover:text-emerald-500" />
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-white group-hover:text-emerald-400">All Future Games</h4>
+                                    <p className="text-sm text-zinc-500 mt-1">
+                                        Join every upcoming session in this recurring series. You can confirm attendance each week.
+                                    </p>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setJoinChoiceOpen(false)} className="text-zinc-400">
+                            Cancel
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
