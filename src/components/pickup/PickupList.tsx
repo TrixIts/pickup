@@ -67,29 +67,36 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
             </div>
 
             {/* Game List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {sessions.length === 0 ? (
                     <div className="text-center py-10 text-zinc-500">No games found near you.</div>
                 ) : (
                     sessions.map((game) => (
                         <div
                             key={game.id}
-                            className={`relative ${game.is_recurring ? 'stacked-card' : ''}`}
+                            className={`relative ${game.is_recurring ? 'mb-2' : ''}`}
                         >
                             {/* Stacked borders for recurring games */}
                             {game.is_recurring && (
                                 <>
-                                    {/* Second layer */}
-                                    <div className="absolute inset-0 bg-zinc-900 border border-zinc-800/60 rounded-lg translate-x-1 translate-y-1 -z-10" />
-                                    {/* Third layer */}
-                                    <div className="absolute inset-0 bg-zinc-900 border border-zinc-800/40 rounded-lg translate-x-2 translate-y-2 -z-20" />
+                                    {/* Third layer (furthest back) */}
+                                    <div
+                                        className="absolute inset-0 bg-zinc-900/80 border border-zinc-800/30 rounded-lg pointer-events-none"
+                                        style={{ transform: 'translate(4px, 4px)', zIndex: 1 }}
+                                    />
+                                    {/* Second layer (middle) */}
+                                    <div
+                                        className="absolute inset-0 bg-zinc-900/90 border border-zinc-800/50 rounded-lg pointer-events-none"
+                                        style={{ transform: 'translate(2px, 2px)', zIndex: 2 }}
+                                    />
                                 </>
                             )}
 
                             <Card
-                                className="bg-zinc-900 border-zinc-800 p-4 hover:border-emerald-500/50 transition-all cursor-pointer group relative z-0"
+                                className="bg-zinc-900 border-zinc-800 p-4 hover:border-emerald-500/50 transition-all cursor-pointer group relative"
                                 onMouseEnter={() => onHoverGame?.(game.id)}
                                 onMouseLeave={() => onHoverGame?.(null)}
+                                style={{ zIndex: 3 }}
                             >
                                 <div className="flex justify-between items-start mb-3">
                                     <div>
