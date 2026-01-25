@@ -107,8 +107,8 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
                                             {game.title}
                                         </h3>
                                         {game.is_recurring && (
-                                            <div className="flex items-center gap-1 text-[10px] text-zinc-400 mt-1">
-                                                <Repeat className="h-3 w-3" /> Recurring Series
+                                            <div className="flex items-center gap-1 text-[10px] text-emerald-400/80 mt-1">
+                                                <Repeat className="h-3 w-3" /> Every week on {game.recurringDay || 'this day'}
                                             </div>
                                         )}
                                     </div>
@@ -128,7 +128,10 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Calendar className="h-3 w-3 text-zinc-500" />
-                                        <span>{new Date(game.startTime).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>
+                                        <span>
+                                            {game.is_recurring && <span className="text-zinc-500">Next: </span>}
+                                            {new Date(game.startTime).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Users className="h-3 w-3 text-zinc-500" />

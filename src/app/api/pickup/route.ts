@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 export async function GET() {
     try {
         const supabase = await createClient();
+        const now = new Date().toISOString();
+
         const { data: sessions, error } = await supabase
             .from('pickup_sessions')
             .select(`
@@ -12,19 +14,48 @@ export async function GET() {
                 host:profiles(*),
                 players:pickup_session_players(count)
             `)
+            .gte('start_time', now) // Only future sessions
             .order('start_time', { ascending: true });
 
         if (error) throw error;
 
-        // Transform data to match expected frontend format if necessary
-        const formattedSessions = sessions?.map(session => ({
-            ...session,
-            startTime: session.start_time, // map snake_case to camelCase for frontend compatibility if needed
-            playerLimit: session.player_limit,
-            _count: {
-                players: session.players?.[0]?.count ?? 0
+        // Group recurring sessions by series_id and keep only the first (nearest) one
+        const seenSeries = new Set<string>();
+        const filteredSessions = sessions?.filter(session => {
+            // Non-recurring sessions always show
+            if (!session.is_recurring || !session.series_id) {
+                return true;
             }
-        }));
+
+            // For recurring sessions, only show the first one per series
+            if (seenSeries.has(session.series_id)) {
+                return false;
+            }
+
+            seenSeries.add(session.series_id);
+            return true;
+        });
+
+        // Transform data to match expected frontend format
+        const formattedSessions = filteredSessions?.map(session => {
+            // Calculate day of week for recurring sessions
+            let recurringDay = null;
+            if (session.is_recurring && session.start_time) {
+                const date = new Date(session.start_time);
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                recurringDay = days[date.getDay()];
+            }
+
+            return {
+                ...session,
+                startTime: session.start_time,
+                playerLimit: session.player_limit,
+                recurringDay, // e.g., "Saturday"
+                _count: {
+                    players: session.players?.[0]?.count ?? 0
+                }
+            };
+        });
 
         return NextResponse.json(formattedSessions);
     } catch (error) {
