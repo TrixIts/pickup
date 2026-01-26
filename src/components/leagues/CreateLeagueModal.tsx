@@ -95,6 +95,16 @@ export const CreateLeagueModal = ({ isOpen, onClose }: CreateLeagueModalProps) =
                                     <SelectItem value="basketball">Basketball</SelectItem>
                                     <SelectItem value="tennis">Tennis</SelectItem>
                                     <SelectItem value="volleyball">Volleyball</SelectItem>
+                                    <SelectItem value="hockey">Hockey</SelectItem>
+                                    <SelectItem value="lacrosse">Lacrosse</SelectItem>
+                                    <SelectItem value="pickleball">Pickleball</SelectItem>
+                                    <SelectItem value="ultimate frisbee">Ultimate Frisbee</SelectItem>
+                                    <SelectItem value="football">Football</SelectItem>
+                                    <SelectItem value="baseball">Baseball</SelectItem>
+                                    <SelectItem value="softball">Softball</SelectItem>
+                                    <SelectItem value="rugby">Rugby</SelectItem>
+                                    <SelectItem value="badminton">Badminton</SelectItem>
+                                    <SelectItem value="table tennis">Table Tennis</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

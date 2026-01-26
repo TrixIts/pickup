@@ -48,7 +48,7 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
                     >
                         All Sports
                     </Badge>
-                    {["Soccer", "Basketball", "Tennis", "Volleyball"].map((s) => (
+                    {["Soccer", "Basketball", "Tennis", "Volleyball", "Hockey", "Lacrosse", "Pickleball", "Ultimate Frisbee", "Football", "Baseball", "Softball", "Rugby", "Badminton", "Table Tennis"].map((s) => (
                         <Badge
                             key={s}
                             variant="outline"

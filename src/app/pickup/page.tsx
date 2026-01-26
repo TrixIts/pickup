@@ -136,7 +136,7 @@ export default function PickupPage() {
                                 userLocation={userLocation}
                             />
                         </TabsContent>
-                        <TabsContent value="list" className="flex-1 m-0 p-0 overflow-y-auto bg-black">
+                        <TabsContent value="list" className="flex-1 m-0 p-0 overflow-y-auto bg-black min-h-0">
                             <PickupList
                                 sessions={listDisplayedSessions}
                                 loading={loading}

@@ -155,6 +155,16 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                                     <SelectItem value="basketball">Basketball</SelectItem>
                                     <SelectItem value="tennis">Tennis</SelectItem>
                                     <SelectItem value="volleyball">Volleyball</SelectItem>
+                                    <SelectItem value="hockey">Hockey</SelectItem>
+                                    <SelectItem value="lacrosse">Lacrosse</SelectItem>
+                                    <SelectItem value="pickleball">Pickleball</SelectItem>
+                                    <SelectItem value="ultimate frisbee">Ultimate Frisbee</SelectItem>
+                                    <SelectItem value="football">Football</SelectItem>
+                                    <SelectItem value="baseball">Baseball</SelectItem>
+                                    <SelectItem value="softball">Softball</SelectItem>
+                                    <SelectItem value="rugby">Rugby</SelectItem>
+                                    <SelectItem value="badminton">Badminton</SelectItem>
+                                    <SelectItem value="table tennis">Table Tennis</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -231,8 +241,8 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                         </Tabs>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                    <div className="grid grid-cols-12 gap-4">
+                        <div className="col-span-12 sm:col-span-6 space-y-2">
                             <Label htmlFor="date" className="text-zinc-400">Date/Time</Label>
                             <Input
                                 id="date"
@@ -242,7 +252,7 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                                 className="bg-zinc-900 border-zinc-800 focus-visible:ring-emerald-500 [color-scheme:dark]"
                             />
                         </div>
-                        <div className="space-y-2">
+                        <div className="col-span-6 sm:col-span-3 space-y-2">
                             <Label htmlFor="limit" className="text-zinc-400">Player Limit</Label>
                             <Input
                                 id="limit"
@@ -250,6 +260,19 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                                 value={formData.playerLimit}
                                 onChange={(e) => setFormData({ ...formData, playerLimit: e.target.value })}
                                 placeholder="10"
+                                className="bg-zinc-900 border-zinc-800 focus-visible:ring-emerald-500"
+                            />
+                        </div>
+                        <div className="col-span-6 sm:col-span-3 space-y-2">
+                            <Label htmlFor="fee" className="text-zinc-400">Fee ($)</Label>
+                            <Input
+                                id="fee"
+                                type="number"
+                                min="0"
+                                step="0.50"
+                                value={formData.fee}
+                                onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
+                                placeholder="0"
                                 className="bg-zinc-900 border-zinc-800 focus-visible:ring-emerald-500"
                             />
                         </div>
