@@ -13,28 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-
-// Predefined tags for reviews
-const POSITIVE_TAGS = [
-    { id: "good_sport", label: "Good Sport", emoji: "🤝" },
-    { id: "skilled", label: "Skilled", emoji: "⭐" },
-    { id: "great_communicator", label: "Great Communicator", emoji: "💬" },
-    { id: "beginner_friendly", label: "Beginner Friendly", emoji: "🌱" },
-    { id: "high_energy", label: "High Energy", emoji: "⚡" },
-];
-
-const NEGATIVE_TAGS = [
-    { id: "too_aggressive", label: "Too Aggressive", emoji: "😤" },
-    { id: "poor_sportsmanship", label: "Poor Sportsmanship", emoji: "👎" },
-    { id: "no_show", label: "No Show", emoji: "👻" },
-];
-
-interface PlayerToReview {
-    id: string;
-    first_name: string;
-    last_name: string;
-    avatar_url?: string;
-}
+import type { PlayerToReview } from "@/types";
+import { POSITIVE_REVIEW_TAGS, NEGATIVE_REVIEW_TAGS } from "@/lib/constants";
 
 interface PostGameReviewModalProps {
     isOpen: boolean;
@@ -176,7 +156,7 @@ export const PostGameReviewModal = ({
                                 {rating >= 4 ? "What made them great?" : "What could improve?"}
                             </p>
                             <div className="flex flex-wrap gap-2">
-                                {(rating >= 4 ? POSITIVE_TAGS : NEGATIVE_TAGS).map((tag) => (
+                                {(rating >= 4 ? POSITIVE_REVIEW_TAGS : NEGATIVE_REVIEW_TAGS).map((tag) => (
                                     <button
                                         key={tag.id}
                                         onClick={() => handleTagToggle(tag.id)}

@@ -25,6 +25,8 @@ import { Loader2, Check, Search, MapPin as MapPinIcon } from "lucide-react";
 import { LocationSearch } from "@/components/pickup/LocationSearch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LocationPickerMap } from "@/components/pickup/LocationPickerMap";
+import { SPORTS, GAME_SKILL_LEVELS } from "@/lib/constants";
+import { toast } from "sonner";
 
 interface CreatePickupModalProps {
     isOpen: boolean;
@@ -119,11 +121,11 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                 window.location.reload();
             } else {
                 const errorData = await response.json();
-                alert(`Failed to create game: ${errorData.error || "Unknown error"}`);
+                toast.error(errorData.error || "Failed to create game");
             }
         } catch (error) {
             console.error(error);
-            alert("An error occurred.");
+            toast.error("An error occurred while creating the game.");
         } finally {
             setLoading(false);
         }
@@ -151,20 +153,9 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                                     <SelectValue placeholder="Select sport" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                                    <SelectItem value="soccer">Soccer</SelectItem>
-                                    <SelectItem value="basketball">Basketball</SelectItem>
-                                    <SelectItem value="tennis">Tennis</SelectItem>
-                                    <SelectItem value="volleyball">Volleyball</SelectItem>
-                                    <SelectItem value="hockey">Hockey</SelectItem>
-                                    <SelectItem value="lacrosse">Lacrosse</SelectItem>
-                                    <SelectItem value="pickleball">Pickleball</SelectItem>
-                                    <SelectItem value="ultimate frisbee">Ultimate Frisbee</SelectItem>
-                                    <SelectItem value="football">Football</SelectItem>
-                                    <SelectItem value="baseball">Baseball</SelectItem>
-                                    <SelectItem value="softball">Softball</SelectItem>
-                                    <SelectItem value="rugby">Rugby</SelectItem>
-                                    <SelectItem value="badminton">Badminton</SelectItem>
-                                    <SelectItem value="table tennis">Table Tennis</SelectItem>
+                                    {SPORTS.map((sport) => (
+                                        <SelectItem key={sport.value} value={sport.value}>{sport.label}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -178,11 +169,9 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
                                     <SelectValue placeholder="Select level" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                                    <SelectItem value="beginner">Beginner</SelectItem>
-                                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                                    <SelectItem value="advanced">Advanced</SelectItem>
-                                    <SelectItem value="pro">Pro</SelectItem>
-                                    <SelectItem value="friendly">Friendly / All Levels</SelectItem>
+                                    {GAME_SKILL_LEVELS.map((level) => (
+                                        <SelectItem key={level.value} value={level.value}>{level.label}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>

@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { SPORTS } from "@/lib/constants";
+import { toast } from "sonner";
 
 interface CreateLeagueModalProps {
     isOpen: boolean;
@@ -63,7 +65,7 @@ export const CreateLeagueModal = ({ isOpen, onClose }: CreateLeagueModalProps) =
             router.refresh();
         } catch (error) {
             console.error(error);
-            alert("Failed to create league");
+            toast.error("Failed to create league");
         } finally {
             setLoading(false);
         }
@@ -91,20 +93,9 @@ export const CreateLeagueModal = ({ isOpen, onClose }: CreateLeagueModalProps) =
                                     <SelectValue placeholder="Select sport" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
-                                    <SelectItem value="soccer">Soccer</SelectItem>
-                                    <SelectItem value="basketball">Basketball</SelectItem>
-                                    <SelectItem value="tennis">Tennis</SelectItem>
-                                    <SelectItem value="volleyball">Volleyball</SelectItem>
-                                    <SelectItem value="hockey">Hockey</SelectItem>
-                                    <SelectItem value="lacrosse">Lacrosse</SelectItem>
-                                    <SelectItem value="pickleball">Pickleball</SelectItem>
-                                    <SelectItem value="ultimate frisbee">Ultimate Frisbee</SelectItem>
-                                    <SelectItem value="football">Football</SelectItem>
-                                    <SelectItem value="baseball">Baseball</SelectItem>
-                                    <SelectItem value="softball">Softball</SelectItem>
-                                    <SelectItem value="rugby">Rugby</SelectItem>
-                                    <SelectItem value="badminton">Badminton</SelectItem>
-                                    <SelectItem value="table tennis">Table Tennis</SelectItem>
+                                    {SPORTS.map((sport) => (
+                                        <SelectItem key={sport.value} value={sport.value}>{sport.label}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>

@@ -10,17 +10,20 @@ import { Plus, Map as MapIcon, List as ListIcon, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/layout/Navbar";
+import type { FormattedSession, MapBounds, UserLocation } from "@/types";
+import { ROUTES } from "@/lib/constants";
+import { getZoomFromRadius } from "@/lib/utils";
 
 export default function PickupPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [sessions, setSessions] = useState<any[]>([]);
+    const [sessions, setSessions] = useState<FormattedSession[]>([]);
     const [loading, setLoading] = useState(true);
     const [highlightedGameId, setHighlightedGameId] = useState<string | null>(null);
 
     // Filtering State
     const [selectedSport, setSelectedSport] = useState<string | null>(null);
-    const [mapBounds, setMapBounds] = useState<{ north: number, south: number, east: number, west: number } | null>(null);
-    const [userLocation, setUserLocation] = useState<{ latitude: number, longitude: number, zoom: number } | null>(null);
+    const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
+    const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
     const supabase = createClient();
     const router = useRouter();
@@ -37,14 +40,13 @@ export default function PickupPage() {
                     .single();
 
                 if (!profile?.age_range || profile.age_range === "") {
-                    router.push("/onboarding");
+                    router.push(ROUTES.ONBOARDING);
                     return;
                 }
 
                 if (profile.latitude && profile.longitude) {
                     const radius = profile.commute_radius || 10;
-                    // Heuristic: Zoom 13 for ~3 miles, Zoom 11 for ~12 miles, Zoom 9 for ~50 miles
-                    const zoom = Math.max(9, Math.min(14, Math.round(13 - Math.log2(radius / 2.5))));
+                    const zoom = getZoomFromRadius(radius);
                     setUserLocation({
                         latitude: profile.latitude,
                         longitude: profile.longitude,

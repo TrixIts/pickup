@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MapPin, CalendarDays, Plus, User } from "lucide-react";
+import { MapPin, CalendarDays, Plus } from "lucide-react";
 import { useState } from "react";
 import { CreatePickupModal } from "@/components/pickup/CreatePickupModal";
 
@@ -11,12 +11,6 @@ export const MobileNav = () => {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
     const isActive = (path: string) => pathname === path || pathname?.startsWith(path + "/");
-
-    // Hide for certain pages
-    const hiddenPaths = ["/login", "/onboarding", "/auth"];
-    const shouldHide = hiddenPaths.some(p => pathname?.startsWith(p));
-
-    if (shouldHide) return null;
 
     return (
         <>

@@ -16,15 +16,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { subscribeToPush } from "@/lib/push";
-
-interface Notification {
-    id: string;
-    type: "CHAT" | "LOCATION_UPDATE" | "TIME_UPDATE" | "GAME_UPDATE";
-    message: string;
-    link: string;
-    read: boolean;
-    created_at: string;
-}
+import type { Notification } from "@/types";
+import { NOTIFICATION_FETCH_LIMIT } from "@/lib/constants";
+import { formatTime } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const NotificationsBell = () => {
     const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -36,14 +31,14 @@ export const NotificationsBell = () => {
     const handleEnablePush = async () => {
         const supported = await subscribeToPush();
         if (supported) {
-            alert("Push notifications enabled!");
+            toast.success("Push notifications enabled!");
         } else {
-            alert("Push notifications not supported or permission denied.");
+            toast.error("Push notifications not supported or permission denied.");
         }
     };
 
     useEffect(() => {
-        let channel: any;
+        let channel: ReturnType<typeof supabase.channel> | undefined;
 
         const setup = async () => {
             const { data: { user } } = await supabase.auth.getUser();
@@ -55,11 +50,11 @@ export const NotificationsBell = () => {
                 .select("*")
                 .eq("user_id", user.id)
                 .order("created_at", { ascending: false })
-                .limit(20);
+                .limit(NOTIFICATION_FETCH_LIMIT);
 
             if (data) {
                 setNotifications(data as Notification[]);
-                setUnreadCount(data.filter((n: any) => !n.read).length);
+                setUnreadCount(data.filter((n) => !n.read).length);
             }
 
             // Realtime
@@ -116,7 +111,7 @@ export const NotificationsBell = () => {
             if (val) handleMarkAsRead();
         }}>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800">
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800" aria-label="Notifications">
                     <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
                         <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 border border-black animate-pulse" />
@@ -156,7 +151,7 @@ export const NotificationsBell = () => {
                                             {n.type.replace('_', ' ')}
                                         </span>
                                         <span className="text-[10px] text-zinc-600">
-                                            {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {formatTime(n.created_at)}
                                         </span>
                                     </div>
                                     <p className={`text-sm ${!n.read ? 'font-bold text-white' : 'text-zinc-400'}`}>

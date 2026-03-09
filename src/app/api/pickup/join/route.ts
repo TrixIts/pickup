@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { SKILL_LEVEL_VALUES } from "@/lib/constants";
 
 export async function POST(req: Request) {
     try {
@@ -59,20 +60,10 @@ export async function POST(req: Request) {
         }
 
         // 6. Check Skill Level
-        // normalize session level
         const sessionLevel = session.level?.toLowerCase();
 
-        // Define ordinal values
-        const LEVEL_VALUES: Record<string, number> = {
-            "beginner": 1,
-            "intermediate": 2,
-            "advanced": 3,
-            "pro": 4
-        };
-
-        // If session has a specific level (not friendly/all), validate
         if (sessionLevel && sessionLevel !== "friendly" && sessionLevel !== "all levels") {
-            const requiredLevelValue = LEVEL_VALUES[sessionLevel] || 0;
+            const requiredLevelValue = SKILL_LEVEL_VALUES[sessionLevel] || 0;
 
             if (requiredLevelValue > 0) {
                 // Fetch user's skill for this sport
@@ -88,7 +79,7 @@ export async function POST(req: Request) {
                 // We'll treat missing skill as 'beginner' (1) or (0).
 
                 const userLevelStr = userSkill?.level?.toLowerCase() || "beginner";
-                const userLevelValue = LEVEL_VALUES[userLevelStr] || 1;
+                const userLevelValue = SKILL_LEVEL_VALUES[userLevelStr] || 1;
 
                 if (userLevelValue < requiredLevelValue) {
                     return NextResponse.json({
@@ -134,8 +125,6 @@ export async function POST(req: Request) {
                 }
             }
         }
-
-        if (joinError) throw joinError;
 
         return NextResponse.json({ success: true, joinedSeries: joinSeries && !!session.series_id });
     } catch (error: any) {

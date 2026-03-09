@@ -19,6 +19,7 @@ import {
     QrCode,
     Users
 } from "lucide-react";
+import { formatShortDate } from "@/lib/utils";
 
 interface ShareGameModalProps {
     isOpen: boolean;
@@ -57,8 +58,7 @@ export const ShareGameModal = ({
         }
     };
 
-    const shareText = `Join me for ${sportName || "a pickup game"}! ${gameTitle}${startTime ? ` - ${new Date(startTime).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}` : ""
-        }`;
+    const shareText = `Join me for ${sportName || "a pickup game"}! ${gameTitle}${startTime ? ` - ${formatShortDate(startTime)}` : ""}`;
 
     const handleNativeShare = async () => {
         if (navigator.share) {
@@ -117,6 +117,7 @@ export const ShareGameModal = ({
                             />
                             <Button
                                 onClick={handleCopy}
+                                aria-label={copied ? "Copied" : "Copy link"}
                                 className={`shrink-0 transition-all ${copied
                                         ? "bg-emerald-500 text-black"
                                         : "bg-zinc-800 hover:bg-zinc-700 text-white"
@@ -145,6 +146,7 @@ export const ShareGameModal = ({
                             {canNativeShare && (
                                 <button
                                     onClick={handleNativeShare}
+                                    aria-label="Share via system share"
                                     className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50 transition-all active:scale-95"
                                 >
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
@@ -155,6 +157,7 @@ export const ShareGameModal = ({
                             )}
                             <button
                                 onClick={handleSMSShare}
+                                aria-label="Share via text message"
                                 className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50 transition-all active:scale-95"
                             >
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
@@ -164,6 +167,7 @@ export const ShareGameModal = ({
                             </button>
                             <button
                                 onClick={handleEmailShare}
+                                aria-label="Share via email"
                                 className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50 transition-all active:scale-95"
                             >
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">

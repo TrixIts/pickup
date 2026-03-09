@@ -6,22 +6,24 @@ import { MapPin, Info, Repeat } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+import type { FormattedSession, MapBounds, UserLocation } from "@/types";
+import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/lib/constants";
+import { formatTime } from "@/lib/utils";
+
 interface PickupMapProps {
-    sessions: any[];
+    sessions: FormattedSession[];
     highlightedGameId?: string | null;
-    onMapMove?: (bounds: { north: number, south: number, east: number, west: number }) => void;
-    userLocation?: { latitude: number, longitude: number, zoom: number } | null;
+    onMapMove?: (bounds: MapBounds) => void;
+    userLocation?: UserLocation | null;
 }
 
-// Los Angeles
 const INITIAL_VIEW_STATE = {
-    latitude: 34.0522,
-    longitude: -118.2437,
-    zoom: 11
+    ...DEFAULT_MAP_CENTER,
+    zoom: DEFAULT_MAP_ZOOM,
 };
 
 export const PickupMap = ({ sessions, highlightedGameId, onMapMove, userLocation }: PickupMapProps) => {
-    const [popupInfo, setPopupInfo] = useState<any>(null);
+    const [popupInfo, setPopupInfo] = useState<FormattedSession | null>(null);
     const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
     // TODO: In a real app, games would have real lat/lng from the DB.
@@ -39,7 +41,7 @@ export const PickupMap = ({ sessions, highlightedGameId, onMapMove, userLocation
 
             // Fallback: Simple hash to get semi-random generic offset near LA
             const hash = game.id.split("").reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-            const latOffset = (hash % 100) / 1000 - 0.05; // +/- 0.05 degrees
+            const latOffset = (hash % 100) / 1000 - 0.05;
             const lngOffset = ((hash * 13) % 100) / 1000 - 0.05;
 
             return {
@@ -139,7 +141,7 @@ export const PickupMap = ({ sessions, highlightedGameId, onMapMove, userLocation
                     </Marker>
                 ))}
 
-                {popupInfo && (
+                {popupInfo && popupInfo.latitude != null && popupInfo.longitude != null && (
                     <Popup
                         anchor="top"
                         latitude={popupInfo.latitude}
@@ -154,7 +156,7 @@ export const PickupMap = ({ sessions, highlightedGameId, onMapMove, userLocation
                                     {popupInfo.sport?.name || "Sport"}
                                 </span>
                                 <span className="text-xs text-zinc-500 font-bold">
-                                    {new Date(popupInfo.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {formatTime(popupInfo.startTime)}
                                 </span>
                             </div>
                             <h3 className="font-bold text-sm mb-1">{popupInfo.title}</h3>

@@ -36,7 +36,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SessionChat } from "@/components/pickup/SessionChat";
 import { ShareGameModal } from "@/components/pickup/ShareGameModal";
+import { PageSpinner } from "@/components/ui/spinner";
 import Link from "next/link";
+import { toast } from "sonner";
+import { formatTime, formatShortDate, formatLongDate } from "@/lib/utils";
+import { ROUTES } from "@/lib/constants";
 
 export default function SessionDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -44,7 +48,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
     const [loading, setLoading] = useState(true);
     const [joining, setJoining] = useState(false);
     const [isJoined, setIsJoined] = useState(false);
-    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
     const [isOwner, setIsOwner] = useState(false);
 
     // Edit Location State
@@ -115,7 +119,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
     // Handle the initial join button click
     const handleJoinClick = () => {
         if (!currentUser) {
-            router.push("/login");
+            router.push(ROUTES.LOGIN);
             return;
         }
 
@@ -141,7 +145,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
             const data = await res.json();
 
             if (res.status === 403 && data.code === "ONBOARDING_REQUIRED") {
-                router.push("/onboarding");
+                router.push(ROUTES.ONBOARDING);
                 return;
             }
 
@@ -156,7 +160,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                     setSession((prev: any) => ({ ...prev, players }));
                 }
             } else {
-                alert(data.error || "Failed to join");
+                toast.error(data.error || "Failed to join");
             }
         } catch (error) {
             console.error(error);
@@ -179,7 +183,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                 setConfirmationStatus(status);
             } else {
                 const data = await res.json();
-                alert(data.error || 'Failed to update confirmation');
+                toast.error(data.error || "Failed to update confirmation");
             }
         } catch (error) {
             console.error('Confirmation update error:', error);
@@ -206,22 +210,18 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                 setEditLocationOpen(false);
             } else {
                 const err = await res.json();
-                alert(err.error || "Failed to update location");
+                toast.error(err.error || "Failed to update location");
             }
         } catch (error) {
             console.error(error);
-            alert("Failed to update");
+            toast.error("Failed to update location");
         } finally {
             setUpdatingLocation(false);
         }
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-            </div>
-        );
+        return <PageSpinner />;
     }
 
     if (!session) {
@@ -294,14 +294,14 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                                 <Calendar className="h-5 w-5 text-emerald-500 mb-3" />
                                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1">Date</p>
                                 <p className="font-bold text-sm truncate">
-                                    {new Date(session.start_time).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
+                                    {formatLongDate(session.start_time)}
                                 </p>
                             </div>
                             <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 hover:border-zinc-800 transition-colors">
                                 <Clock className="h-5 w-5 text-emerald-500 mb-3" />
                                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600 mb-1">Time</p>
                                 <p className="font-bold text-sm truncate">
-                                    {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {formatTime(session.start_time)}
                                 </p>
                             </div>
                             <div className="bg-zinc-950 border border-zinc-900 rounded-3xl p-6 hover:border-zinc-800 transition-colors group relative">
@@ -312,6 +312,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                                         <button
                                             onClick={() => setEditLocationOpen(true)}
                                             className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-zinc-800 rounded text-zinc-400 hover:text-white"
+                                            aria-label="Edit location"
                                         >
                                             <Pencil className="h-3 w-3" />
                                         </button>
@@ -347,7 +348,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                                     <div key={i} className="flex items-center gap-3 p-3 bg-zinc-900 rounded-2xl border border-zinc-800">
                                         <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center overflow-hidden shrink-0">
                                             {p.profiles?.avatar_url ? (
-                                                <img src={p.profiles.avatar_url} alt="" className="w-full h-full object-cover" />
+                                                <img src={p.profiles.avatar_url} alt={`${p.profiles.first_name}'s avatar`} className="w-full h-full object-cover" />
                                             ) : (
                                                 <Users className="h-5 w-5 text-zinc-600" />
                                             )}
@@ -417,7 +418,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                                     <div>
                                         <h4 className="font-bold text-white text-sm">Confirm Your Attendance</h4>
                                         <p className="text-xs text-zinc-500">
-                                            {new Date(session.start_time).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })} at {new Date(session.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {formatLongDate(session.start_time)} at {formatTime(session.start_time)}
                                         </p>
                                     </div>
                                 </div>
@@ -547,7 +548,7 @@ export default function SessionDetailsPage({ params }: { params: Promise<{ id: s
                                 <div>
                                     <h4 className="font-bold text-white group-hover:text-emerald-400">Just This Week</h4>
                                     <p className="text-sm text-zinc-500 mt-1">
-                                        Join only the upcoming session on {new Date(session.start_time).toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' })}
+                                        Join only the upcoming session on {formatLongDate(session.start_time)}
                                     </p>
                                 </div>
                             </div>

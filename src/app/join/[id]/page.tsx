@@ -3,16 +3,31 @@
 import { useEffect, useState, use } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { Loader2, Calendar, MapPin, Users, Trophy, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, Users, Trophy, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PageSpinner, Spinner } from "@/components/ui/spinner";
+import { formatLongDate, formatTime } from "@/lib/utils";
 import Link from "next/link";
+
+interface JoinSession {
+    id: string;
+    title: string;
+    description: string | null;
+    location: string;
+    start_time: string;
+    player_limit: number | null;
+    fee: number;
+    sport?: { name: string } | null;
+    host?: { first_name: string; last_name: string; avatar_url: string | null } | null;
+    players?: { count: number }[];
+}
 
 export default function JoinGamePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const [loading, setLoading] = useState(true);
-    const [session, setSession] = useState<any>(null);
-    const [user, setUser] = useState<any>(null);
+    const [session, setSession] = useState<JoinSession | null>(null);
+    const [user, setUser] = useState<{ id: string } | null>(null);
     const [joining, setJoining] = useState(false);
     const [joinStatus, setJoinStatus] = useState<"idle" | "success" | "error">("idle");
     const [errorMessage, setErrorMessage] = useState("");
@@ -78,7 +93,7 @@ export default function JoinGamePage({ params }: { params: Promise<{ id: string 
                 setJoinStatus("error");
                 setErrorMessage(data.error || "Unable to join this game");
             }
-        } catch (error: any) {
+        } catch {
             setJoinStatus("error");
             setErrorMessage("Something went wrong. Please try again.");
         } finally {
@@ -94,12 +109,7 @@ export default function JoinGamePage({ params }: { params: Promise<{ id: string 
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="text-center space-y-4">
-                    <Loader2 className="h-10 w-10 animate-spin text-emerald-500 mx-auto" />
-                    <p className="text-zinc-500 font-medium">Loading game details...</p>
-                </div>
-            </div>
+            <PageSpinner label="Loading game details..." />
         );
     }
 
@@ -175,16 +185,7 @@ export default function JoinGamePage({ params }: { params: Promise<{ id: string 
                         <div>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-600">When</p>
                             <p className="font-bold text-lg">
-                                {new Date(session.start_time).toLocaleDateString([], {
-                                    weekday: "long",
-                                    month: "long",
-                                    day: "numeric",
-                                })}{" "}
-                                at{" "}
-                                {new Date(session.start_time).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                })}
+                                {formatLongDate(session.start_time)} at {formatTime(session.start_time)}
                             </p>
                         </div>
                     </div>
@@ -218,7 +219,7 @@ export default function JoinGamePage({ params }: { params: Promise<{ id: string 
                                 {session.host.avatar_url ? (
                                     <img
                                         src={session.host.avatar_url}
-                                        alt=""
+                                        alt={`${session.host.first_name}'s avatar`}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
@@ -250,7 +251,7 @@ export default function JoinGamePage({ params }: { params: Promise<{ id: string 
                                 <p className="text-black/70 font-medium">
                                     Taking you to the locker room...
                                 </p>
-                                <Loader2 className="h-5 w-5 animate-spin mx-auto mt-4" />
+                                <Spinner className="mx-auto mt-4" />
                             </div>
                         ) : joinStatus === "error" ? (
                             <div className="bg-red-500/10 border border-red-500/30 rounded-3xl p-6 text-center">
@@ -268,7 +269,7 @@ export default function JoinGamePage({ params }: { params: Promise<{ id: string 
                             </div>
                         ) : (
                             <div className="bg-zinc-950 border border-zinc-800 rounded-3xl p-6 text-center">
-                                <Loader2 className="h-8 w-8 animate-spin text-emerald-500 mx-auto mb-4" />
+                                <Spinner size="lg" className="text-emerald-500 mx-auto mb-4" />
                                 <p className="text-zinc-400 font-medium">Joining game...</p>
                             </div>
                         )

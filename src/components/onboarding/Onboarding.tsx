@@ -31,12 +31,13 @@ const STEPS = [
     { id: "final", title: "Finalize" }
 ];
 
-import { AGE_RANGES, GENDERS, SKILL_LEVELS } from "@/lib/constants";
+import { AGE_RANGES, GENDERS, SKILL_LEVELS, COMMUTE_RADIUS_MIN, COMMUTE_RADIUS_MAX, COMMUTE_RADIUS_DEFAULT } from "@/lib/constants";
+import { toast } from "sonner";
 
 export const Onboarding = () => {
     const [currentStep, setCurrentStep] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [sports, setSports] = useState<any[]>([]);
+    const [sports, setSports] = useState<{ id: string; name: string }[]>([]);
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -47,7 +48,7 @@ export const Onboarding = () => {
         location: "",
         lat: 0,
         lng: 0,
-        commuteRadius: 10,
+        commuteRadius: COMMUTE_RADIUS_DEFAULT,
         interestedInLeagues: false,
         avatarUrl: ""
     });
@@ -151,7 +152,7 @@ export const Onboarding = () => {
 
         if (profileError) {
             console.error("Profile update error:", profileError);
-            alert("Error saving profile: " + profileError.message);
+            toast.error("Error saving profile: " + profileError.message);
             setLoading(false);
             return;
         }
@@ -403,8 +404,8 @@ export const Onboarding = () => {
                                     </div>
                                     <input
                                         type="range"
-                                        min="1"
-                                        max="50"
+                                        min={COMMUTE_RADIUS_MIN}
+                                        max={COMMUTE_RADIUS_MAX}
                                         value={formData.commuteRadius}
                                         onChange={(e) => setFormData({ ...formData, commuteRadius: parseInt(e.target.value) })}
                                         className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
@@ -516,7 +517,7 @@ export const Onboarding = () => {
                     <Button
                         onClick={async () => {
                             if (!formData.ageRange || !formData.gender || !formData.firstName) {
-                                alert("Please make sure your first name, age range, and gender are set.");
+                                toast.error("Please make sure your first name, age range, and gender are set.");
                                 // Find step to go back to if needed
                                 if (!formData.firstName) setCurrentStep(0);
                                 else if (!formData.ageRange || !formData.gender) setCurrentStep(1);

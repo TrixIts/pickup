@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { RECURRING_SESSION_COUNT, PLAYER_ROLES } from "@/lib/constants";
+import { getDayOfWeek } from "@/lib/utils";
 
 export async function GET() {
     try {
@@ -38,13 +40,9 @@ export async function GET() {
 
         // Transform data to match expected frontend format
         const formattedSessions = filteredSessions?.map(session => {
-            // Calculate day of week for recurring sessions
-            let recurringDay = null;
-            if (session.is_recurring && session.start_time) {
-                const date = new Date(session.start_time);
-                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                recurringDay = days[date.getDay()];
-            }
+            const recurringDay = (session.is_recurring && session.start_time)
+                ? getDayOfWeek(session.start_time)
+                : null;
 
             return {
                 ...session,
@@ -106,7 +104,7 @@ export async function POST(req: Request) {
 
         // Recurrence Logic
         const seriesId = isRecurring ? crypto.randomUUID() : null;
-        const sessionsToCreate = isRecurring ? 4 : 1;
+        const sessionsToCreate = isRecurring ? RECURRING_SESSION_COUNT : 1;
         const createdSessions = [];
 
         let baseDate = new Date(startTime);
@@ -148,7 +146,7 @@ export async function POST(req: Request) {
                 await supabase.from('pickup_session_players').insert({
                     session_id: session.id,
                     profile_id: finalHostId,
-                    role: 'OWNER'
+                    role: PLAYER_ROLES.OWNER
                 });
             }
         }

@@ -3,11 +3,15 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Calendar, Clock, Users, Loader2, ChevronRight, Repeat } from "lucide-react";
+import { Search, MapPin, Calendar, Clock, Users, ChevronRight, Repeat } from "lucide-react";
 import Link from "next/link";
+import type { FormattedSession } from "@/types";
+import { SPORT_NAMES } from "@/lib/constants";
+import { formatTime, formatShortDate } from "@/lib/utils";
+import { ContentSpinner } from "@/components/ui/spinner";
 
 interface PickupListProps {
-    sessions: any[];
+    sessions: FormattedSession[];
     loading: boolean;
     onHoverGame?: (id: string | null) => void;
     selectedSport: string | null;
@@ -21,7 +25,7 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
     if (loading) {
         return (
             <div className="flex h-full items-center justify-center bg-zinc-950">
-                <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+                <ContentSpinner />
             </div>
         );
     }
@@ -48,7 +52,7 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
                     >
                         All Sports
                     </Badge>
-                    {["Soccer", "Basketball", "Tennis", "Volleyball", "Hockey", "Lacrosse", "Pickleball", "Ultimate Frisbee", "Football", "Baseball", "Softball", "Rugby", "Badminton", "Table Tennis"].map((s) => (
+                    {SPORT_NAMES.map((s) => (
                         <Badge
                             key={s}
                             variant="outline"
@@ -124,13 +128,13 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-3 w-3 text-zinc-500" />
-                                        <span>{new Date(game.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        <span>{formatTime(game.startTime)}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Calendar className="h-3 w-3 text-zinc-500" />
                                         <span>
                                             {game.is_recurring && <span className="text-zinc-500">Next: </span>}
-                                            {new Date(game.startTime).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                            {formatShortDate(game.startTime)}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">

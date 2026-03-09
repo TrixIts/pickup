@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import Map, { Marker, NavigationControl, MapLayerMouseEvent } from "react-map-gl";
 import { MapPin } from "lucide-react";
+import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "@/lib/constants";
 
 interface LocationPickerMapProps {
     onLocationSelect: (lat: number, lng: number) => void;
@@ -11,11 +12,10 @@ interface LocationPickerMapProps {
     className?: string;
 }
 
-// Default to LA if no initial coords
 const DEFAULT_VIEW_STATE = {
-    latitude: 34.0522,
-    longitude: -118.2437,
-    zoom: 11
+    latitude: DEFAULT_MAP_CENTER.latitude as number,
+    longitude: DEFAULT_MAP_CENTER.longitude as number,
+    zoom: DEFAULT_MAP_ZOOM as number,
 };
 
 export const LocationPickerMap = ({

@@ -6,16 +6,31 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, MapPin, Clock, ArrowRight, Trophy, Users, Loader2, Repeat } from "lucide-react";
+import { Calendar, MapPin, Clock, ArrowRight, Trophy, Users, Repeat } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { ProfileSettings } from "@/components/profile/ProfileSettings";
+import { ContentSpinner } from "@/components/ui/spinner";
+import { formatTime, formatShortDate } from "@/lib/utils";
+import { PLAYER_ROLES } from "@/lib/constants";
+
+interface DashboardGame {
+    id: string;
+    title: string;
+    location: string;
+    start_time: string;
+    player_limit: number | null;
+    is_recurring: boolean;
+    sport?: { name: string } | null;
+    userRole: string;
+    playerCount: number;
+}
 
 export default function DashboardPage() {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
     const [loading, setLoading] = useState(true);
-    const [upcomingGames, setUpcomingGames] = useState<any[]>([]);
-    const [pastGames, setPastGames] = useState<any[]>([]);
+    const [upcomingGames, setUpcomingGames] = useState<DashboardGame[]>([]);
+    const [pastGames, setPastGames] = useState<DashboardGame[]>([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const supabase = createClient();
@@ -43,16 +58,16 @@ export default function DashboardPage() {
                 const sessions = playerSessions.map((p: any) => ({
                     ...p.session,
                     userRole: p.role,
-                    playerCount: p.session.players?.[0]?.count || 0
+                    playerCount: p.session?.players?.[0]?.count || 0
                 }));
 
                 const upcoming = sessions
-                    .filter((s: any) => new Date(s.start_time) > now)
-                    .sort((a: any, b: any) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+                    .filter((s: DashboardGame) => new Date(s.start_time) > now)
+                    .sort((a: DashboardGame, b: DashboardGame) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
                 const past = sessions
-                    .filter((s: any) => new Date(s.start_time) <= now)
-                    .sort((a: any, b: any) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
+                    .filter((s: DashboardGame) => new Date(s.start_time) <= now)
+                    .sort((a: DashboardGame, b: DashboardGame) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime());
 
                 setUpcomingGames(upcoming);
                 setPastGames(past);
@@ -141,10 +156,7 @@ export default function DashboardPage() {
 
                             <TabsContent value="upcoming" className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                 {loading ? (
-                                    <div className="text-zinc-500 text-center py-12 flex flex-col items-center gap-4">
-                                        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-                                        <p>Loading schedule...</p>
-                                    </div>
+                                    <ContentSpinner label="Loading schedule..." />
                                 ) : upcomingGames.length > 0 ? (
                                     upcomingGames.map((game) => (
                                         <GameCard key={game.id} game={game} />
@@ -184,7 +196,7 @@ export default function DashboardPage() {
     );
 }
 
-function GameCard({ game, isPast }: { game: any, isPast?: boolean }) {
+function GameCard({ game, isPast }: { game: DashboardGame, isPast?: boolean }) {
     return (
         <div className={`group relative flex flex-col md:flex-row gap-6 p-6 rounded-3xl border border-zinc-900 bg-zinc-950 hover:border-zinc-800 transition-all ${isPast ? 'opacity-60 grayscale hover:grayscale-0 hover:opacity-100' : ''}`}>
             <div className="flex-1 space-y-4">
@@ -192,14 +204,14 @@ function GameCard({ game, isPast }: { game: any, isPast?: boolean }) {
                     <Badge className="bg-emerald-500 text-black hover:bg-emerald-400">
                         {game.sport?.name}
                     </Badge>
-                    {game.userRole === 'OWNER' && (
+                    {game.userRole === PLAYER_ROLES.OWNER && (
                         <Badge variant="outline" className="border-emerald-500/50 text-emerald-500">
                             Host
                         </Badge>
                     )}
                     <span className="text-xs font-bold text-zinc-400 flex items-center gap-1 ml-auto md:ml-0">
                         <Clock className="h-3 w-3 text-emerald-500" />
-                        {new Date(game.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {formatTime(game.start_time)}
                     </span>
                 </div>
                 {game.is_recurring && (
@@ -214,7 +226,7 @@ function GameCard({ game, isPast }: { game: any, isPast?: boolean }) {
                     <div className="flex items-center text-sm text-zinc-400 gap-4">
                         <span className="flex items-center gap-1">
                             <Calendar className="h-4 w-4 text-zinc-600" />
-                            {new Date(game.start_time).toLocaleDateString([], { month: 'short', day: 'numeric', weekday: 'short' })}
+                            {formatShortDate(game.start_time)}
                         </span>
                         <span className="flex items-center gap-1">
                             <MapPin className="h-4 w-4 text-emerald-500" />

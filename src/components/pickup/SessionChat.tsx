@@ -2,21 +2,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Send, Loader2, User } from "lucide-react";
+import { Send, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-interface Message {
-    id: string;
-    content: string;
-    created_at: string;
-    profile_id: string;
-    profiles: {
-        first_name: string;
-        last_name: string;
-        avatar_url: string | null;
-    } | null;
-}
+import type { SessionMessage } from "@/types";
+import { formatTime } from "@/lib/utils";
+import { ContentSpinner } from "@/components/ui/spinner";
 
 interface SessionChatProps {
     sessionId: string;
@@ -24,10 +15,10 @@ interface SessionChatProps {
 }
 
 export const SessionChat = ({ sessionId, seriesId }: SessionChatProps) => {
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<SessionMessage[]>([]);
     const [newMessage, setNewMessage] = useState("");
     const [loading, setLoading] = useState(true);
-    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const supabase = createClient();
 
@@ -43,7 +34,7 @@ export const SessionChat = ({ sessionId, seriesId }: SessionChatProps) => {
 
             const { data, error } = await query.order("created_at", { ascending: true });
 
-            if (data) setMessages(data as any);
+            if (data) setMessages(data as SessionMessage[]);
             setLoading(false);
         };
 
@@ -71,7 +62,7 @@ export const SessionChat = ({ sessionId, seriesId }: SessionChatProps) => {
                     const messageWithProfile = {
                         ...payload.new,
                         profiles: profile
-                    } as Message;
+                    } as SessionMessage;
 
                     setMessages(prev => [...prev, messageWithProfile]);
                 }
@@ -116,7 +107,7 @@ export const SessionChat = ({ sessionId, seriesId }: SessionChatProps) => {
     if (loading) {
         return (
             <div className="h-full flex items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
+                <ContentSpinner />
             </div>
         );
     }
@@ -143,7 +134,7 @@ export const SessionChat = ({ sessionId, seriesId }: SessionChatProps) => {
                             <div className={`flex gap-3 max-w-[80%] ${isMe ? "flex-row-reverse" : "flex-row"}`}>
                                 <div className="shrink-0">
                                     {msg.profiles?.avatar_url ? (
-                                        <img src={msg.profiles.avatar_url} alt="" className="w-8 h-8 rounded-full border border-zinc-800" />
+                                        <img src={msg.profiles.avatar_url} alt={`${msg.profiles.first_name}'s avatar`} className="w-8 h-8 rounded-full border border-zinc-800" />
                                     ) : (
                                         <div className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center">
                                             <User className="h-4 w-4 text-zinc-600" />
@@ -156,7 +147,7 @@ export const SessionChat = ({ sessionId, seriesId }: SessionChatProps) => {
                                             {isMe ? "You" : (msg.profiles?.first_name || "User")}
                                         </span>
                                         <span className="text-[8px] text-zinc-700">
-                                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            {formatTime(msg.created_at)}
                                         </span>
                                     </div>
                                     <div className={`
@@ -188,6 +179,7 @@ export const SessionChat = ({ sessionId, seriesId }: SessionChatProps) => {
                         size="icon"
                         disabled={!newMessage.trim()}
                         className="absolute right-1 top-1 bottom-1 bg-emerald-500 text-black hover:bg-emerald-400 rounded-xl w-10 h-10"
+                        aria-label="Send message"
                     >
                         <Send className="h-4 w-4" />
                     </Button>

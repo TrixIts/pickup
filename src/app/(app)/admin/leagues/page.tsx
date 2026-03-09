@@ -6,13 +6,15 @@ import { CreateLeagueModal } from "@/components/leagues/CreateLeagueModal";
 import { LeagueCard } from "@/components/leagues/LeagueCard";
 import { Button } from "@/components/ui/button";
 import { Plus, Trophy, LayoutDashboard } from "lucide-react";
-import { Navbar } from "@/components/layout/Navbar"; // Assuming reused navbar for now
+import { Navbar } from "@/components/layout/Navbar";
+import { ContentSpinner } from "@/components/ui/spinner";
+import type { League } from "@/types";
 
 export default function LeagueDashboardPage() {
-    const [leagues, setLeagues] = useState<any[]>([]);
+    const [leagues, setLeagues] = useState<League[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
 
     const supabase = createClient();
 
@@ -58,7 +60,7 @@ export default function LeagueDashboardPage() {
                 </div>
 
                 {loading ? (
-                    <div className="text-center py-20 text-zinc-500">Loading your leagues...</div>
+                    <ContentSpinner label="Loading your leagues..." />
                 ) : leagues.length === 0 ? (
                     <div className="border border-zinc-800 rounded-2xl p-12 text-center bg-zinc-900/20 dashed">
                         <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4">

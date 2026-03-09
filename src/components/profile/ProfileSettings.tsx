@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Camera, Upload } from "lucide-react";
-import { AGE_RANGES, GENDERS } from "@/lib/constants";
+import { AGE_RANGES, GENDERS, COMMUTE_RADIUS_MIN, COMMUTE_RADIUS_MAX, COMMUTE_RADIUS_DEFAULT } from "@/lib/constants";
+import type { Profile } from "@/types";
 
 export const ProfileSettings = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
     const [loading, setLoading] = useState(false);
-    const [profile, setProfile] = useState<any>(null);
+    const [profile, setProfile] = useState<Profile | null>(null);
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -31,6 +32,7 @@ export const ProfileSettings = ({ isOpen, onClose }: { isOpen: boolean, onClose:
     }, [isOpen, supabase]);
 
     const handleUpdate = async () => {
+        if (!profile) return;
         setLoading(true);
         const { error } = await supabase.from('profiles').upsert({
             id: profile.id,
@@ -39,7 +41,7 @@ export const ProfileSettings = ({ isOpen, onClose }: { isOpen: boolean, onClose:
             age_range: profile.age_range,
             gender: profile.gender,
             avatar_url: previewUrl || profile.avatar_url,
-            commute_radius: parseInt(profile.commute_radius),
+            commute_radius: profile.commute_radius ?? COMMUTE_RADIUS_DEFAULT,
             updated_at: new Date().toISOString()
         });
 
@@ -84,7 +86,7 @@ export const ProfileSettings = ({ isOpen, onClose }: { isOpen: boolean, onClose:
                         <div className="relative w-28 h-28 mb-4 group">
                             <div className="w-full h-full rounded-full overflow-hidden border-4 border-zinc-900 bg-zinc-900 shadow-xl">
                                 {(previewUrl || profile.avatar_url) ? (
-                                    <img src={previewUrl || profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                    <img src={previewUrl || profile.avatar_url || undefined} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-zinc-600 bg-zinc-800">
                                         <Camera className="h-10 w-10" />
@@ -149,8 +151,8 @@ export const ProfileSettings = ({ isOpen, onClose }: { isOpen: boolean, onClose:
                         </div>
                         <input
                             type="range"
-                            min="1"
-                            max="50"
+                            min={COMMUTE_RADIUS_MIN}
+                            max={COMMUTE_RADIUS_MAX}
                             value={profile.commute_radius || 10}
                             onChange={(e) => setProfile({ ...profile, commute_radius: parseInt(e.target.value) })}
                             className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-emerald-500 hover:accent-emerald-400"

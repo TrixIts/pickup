@@ -41,7 +41,7 @@ const organizerFeatures = [
     },
     {
         title: "Advanced Stats",
-        description: "Track player goals, fouls, and and season standings automatically.",
+        description: "Track player goals, fouls, and season standings automatically.",
         icon: BarChart3,
     },
 ];

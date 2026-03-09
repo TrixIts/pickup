@@ -16,14 +16,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User as UserIcon, Calendar, Trophy, MapPin, Shield } from "lucide-react";
 import { NotificationsBell } from "@/components/layout/NotificationsBell";
+import type { Profile } from "@/types";
 
-// Navbar component
 export const Navbar = () => {
     const pathname = usePathname();
     const router = useRouter();
     const supabase = createClient();
-    const [user, setUser] = useState<any>(null);
-    const [profile, setProfile] = useState<any>(null);
+    const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+    const [profile, setProfile] = useState<Profile | null>(null);
 
     useEffect(() => {
         const getUser = async () => {
@@ -88,9 +88,9 @@ export const Navbar = () => {
                         <NotificationsBell />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                                <Button variant="ghost" className="relative h-10 w-10 rounded-full" aria-label="User menu">
                                     <Avatar className="h-10 w-10 border border-zinc-700">
-                                        <AvatarImage src={profile?.avatar_url} alt={profile?.first_name} />
+                                        <AvatarImage src={profile?.avatar_url ?? undefined} alt={profile?.first_name} />
                                         <AvatarFallback className="bg-zinc-800 text-zinc-400 font-bold">
                                             {profile?.first_name?.[0]}{profile?.last_name?.[0]}
                                         </AvatarFallback>

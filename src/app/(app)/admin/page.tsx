@@ -14,11 +14,11 @@ import {
     ChevronLeft,
     ChevronRight,
     Shield,
-    Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { PageSpinner, ContentSpinner } from "@/components/ui/spinner";
 import {
     LineChart,
     Line,
@@ -57,8 +57,8 @@ export default function AdminPage() {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [stats, setStats] = useState<Stats | null>(null);
-    const [chartData, setChartData] = useState<any[]>([]);
-    const [sportData, setSportData] = useState<any[]>([]);
+    const [chartData, setChartData] = useState<{ date: string; signups: number; games: number; messages: number }[]>([]);
+    const [sportData, setSportData] = useState<{ name: string; count: number }[]>([]);
     const [users, setUsers] = useState<User[]>([]);
     const [userSearch, setUserSearch] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -128,11 +128,7 @@ export default function AdminPage() {
     };
 
     if (loading || !isAdmin) {
-        return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-            </div>
-        );
+        return <PageSpinner />;
     }
 
     const statCards = [
@@ -247,9 +243,7 @@ export default function AdminPage() {
                     </div>
 
                     {usersLoading ? (
-                        <div className="flex justify-center py-12">
-                            <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
-                        </div>
+                        <ContentSpinner />
                     ) : (
                         <>
                             <div className="overflow-x-auto">
@@ -270,7 +264,7 @@ export default function AdminPage() {
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center overflow-hidden">
                                                             {user.avatar_url ? (
-                                                                <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
+                                                                <img src={user.avatar_url} alt={`${user.first_name}'s avatar`} className="w-full h-full object-cover" />
                                                             ) : (
                                                                 <Users className="h-5 w-5 text-zinc-600" />
                                                             )}
