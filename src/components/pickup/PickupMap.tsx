@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl";
-import { MapPin, Info, Repeat } from "lucide-react";
+import { Crosshair, MapPin, Repeat } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +15,8 @@ interface PickupMapProps {
     highlightedGameId?: string | null;
     onMapMove?: (bounds: MapBounds) => void;
     userLocation?: UserLocation | null;
+    isCreateMode?: boolean;
+    onCreateLocationSelect?: (latitude: number, longitude: number) => void;
 }
 
 const INITIAL_VIEW_STATE = {
@@ -22,14 +24,21 @@ const INITIAL_VIEW_STATE = {
     zoom: DEFAULT_MAP_ZOOM,
 };
 
-export const PickupMap = ({ sessions, highlightedGameId, onMapMove, userLocation }: PickupMapProps) => {
+export const PickupMap = ({
+    sessions,
+    highlightedGameId,
+    onMapMove,
+    userLocation,
+    isCreateMode = false,
+    onCreateLocationSelect
+}: PickupMapProps) => {
     const [popupInfo, setPopupInfo] = useState<FormattedSession | null>(null);
     const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
     // TODO: In a real app, games would have real lat/lng from the DB.
     // For now, we deterministically mock coordinates near LA based on the ID string.
     const gamesWithCoords = useMemo(() => {
-        return sessions.map((game, i) => {
+        return sessions.map((game) => {
             // Use real coordinates if available
             if (game.latitude && game.longitude) {
                 return {
@@ -88,6 +97,11 @@ export const PickupMap = ({ sessions, highlightedGameId, onMapMove, userLocation
                 style={{ width: "100%", height: "100%" }}
                 mapStyle="mapbox://styles/mapbox/dark-v11"
                 mapboxAccessToken={mapboxToken}
+                cursor={isCreateMode ? "crosshair" : "grab"}
+                onClick={(event) => {
+                    if (!isCreateMode) return;
+                    onCreateLocationSelect?.(event.lngLat.lat, event.lngLat.lng);
+                }}
                 onMoveEnd={(e) => {
                     const bounds = e.target.getBounds();
                     if (onMapMove && bounds) {
@@ -102,13 +116,25 @@ export const PickupMap = ({ sessions, highlightedGameId, onMapMove, userLocation
             >
                 <NavigationControl position="top-right" />
 
+                {isCreateMode && (
+                    <div className="pointer-events-none absolute left-1/2 top-5 z-10 w-[min(420px,calc(100%-2rem))] -translate-x-1/2 rounded-2xl border border-emerald-500/40 bg-black/85 p-4 text-center shadow-2xl backdrop-blur">
+                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-black">
+                            <Crosshair className="h-5 w-5" />
+                        </div>
+                        <p className="text-sm font-black uppercase tracking-tight text-white">Click the exact field or court</p>
+                        <p className="mt-1 text-xs leading-5 text-zinc-400">
+                            Your next map click drops the game pin and opens the details form.
+                        </p>
+                    </div>
+                )}
+
                 {gamesWithCoords.map((game) => (
                     <Marker
                         key={game.id}
                         latitude={game.latitude}
                         longitude={game.longitude}
                         anchor="bottom"
-                        onClick={(e: any) => {
+                        onClick={(e) => {
                             e.originalEvent.stopPropagation();
                             setPopupInfo(game);
                         }}

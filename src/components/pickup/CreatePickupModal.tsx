@@ -25,9 +25,14 @@ import { toast } from "sonner";
 interface CreatePickupModalProps {
     isOpen: boolean;
     onClose: () => void;
+    initialLocation?: {
+        latitude: number;
+        longitude: number;
+        location?: string;
+    } | null;
 }
 
-export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) => {
+export const CreatePickupModal = ({ isOpen, onClose, initialLocation }: CreatePickupModalProps) => {
     const [loading, setLoading] = useState(false);
     const [step, setStep] = useState<"pin" | "details">("pin");
     const [formData, setFormData] = useState({
@@ -55,6 +60,40 @@ export const CreatePickupModal = ({ isOpen, onClose }: CreatePickupModalProps) =
         };
         getUser();
     }, []);
+
+    useEffect(() => {
+        if (!isOpen || !initialLocation) return;
+
+        setStep("details");
+        setFormData(prev => ({
+            ...prev,
+            latitude: initialLocation.latitude,
+            longitude: initialLocation.longitude,
+            location: initialLocation.location || `${initialLocation.latitude.toFixed(4)}, ${initialLocation.longitude.toFixed(4)}`,
+        }));
+
+        const reverseGeocodeInitialLocation = async () => {
+            try {
+                const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+                if (!mapboxToken || initialLocation.location) return;
+
+                const res = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${initialLocation.longitude},${initialLocation.latitude}.json?access_token=${mapboxToken}&types=address,poi`);
+                const data = await res.json();
+                if (data.features && data.features.length > 0) {
+                    setFormData(prev => ({
+                        ...prev,
+                        location: data.features[0].place_name,
+                        latitude: initialLocation.latitude,
+                        longitude: initialLocation.longitude
+                    }));
+                }
+            } catch (error) {
+                console.error("Reverse geocoding failed", error);
+            }
+        };
+
+        reverseGeocodeInitialLocation();
+    }, [initialLocation, isOpen]);
 
     const hasPinnedLocation = formData.latitude != null && formData.longitude != null;
     const coordinatesLabel = hasPinnedLocation
