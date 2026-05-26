@@ -1,16 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { MapPin, CalendarDays, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CreatePickupModal } from "@/components/pickup/CreatePickupModal";
+import { createClient } from "@/lib/supabase/client";
+import { ROUTES } from "@/lib/constants";
 
 export const MobileNav = () => {
     const pathname = usePathname();
+    const router = useRouter();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [userId, setUserId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const supabase = createClient();
+        supabase.auth.getUser().then(({ data }) => {
+            setUserId(data.user?.id ?? null);
+        });
+    }, []);
 
     const isActive = (path: string) => pathname === path || pathname?.startsWith(path + "/");
+    const handleCreateClick = () => {
+        if (!userId) {
+            router.push(`${ROUTES.LOGIN}?returnTo=${encodeURIComponent(ROUTES.PICKUP)}&signup=true`);
+            return;
+        }
+        setIsCreateModalOpen(true);
+    };
 
     return (
         <>
@@ -30,7 +48,7 @@ export const MobileNav = () => {
 
                     {/* Create Game - Center FAB-like button */}
                     <button
-                        onClick={() => setIsCreateModalOpen(true)}
+                        onClick={handleCreateClick}
                         className="flex flex-col items-center justify-center flex-1 gap-1 relative"
                     >
                         <div className="absolute -top-5 w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30 active:scale-95 transition-transform">
