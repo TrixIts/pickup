@@ -1,14 +1,19 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Calendar, Clock, Users, ChevronRight, Repeat } from "lucide-react";
+import { Search, MapPin, Calendar, Clock, Users, ChevronRight, Repeat, LocateFixed, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import type { FormattedSession } from "@/types";
 import { SPORT_NAMES } from "@/lib/constants";
 import { formatTime, formatShortDate } from "@/lib/utils";
 import { ContentSpinner } from "@/components/ui/spinner";
+
+type SortOption = "soonest" | "nearest";
+
+const RADIUS_OPTIONS = [5, 10, 25, 50, 100];
 
 interface PickupListProps {
     sessions: FormattedSession[];
@@ -16,11 +21,42 @@ interface PickupListProps {
     onHoverGame?: (id: string | null) => void;
     selectedSport: string | null;
     onSelectSport: (sport: string | null) => void;
+    searchQuery: string;
+    onSearchQueryChange: (query: string) => void;
+    onClearFilters: () => void;
+    resultCount: number;
+    totalCount: number;
+    sortBy: SortOption;
+    onSortByChange: (sortBy: SortOption) => void;
+    radiusMiles: number;
+    onRadiusChange: (radius: number) => void;
+    locationLabel: string;
+    onUseCurrentLocation: () => void;
+    distanceBySessionId: Record<string, number>;
 }
 
-export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSelectSport }: PickupListProps) => {
+export const PickupList = ({
+    sessions,
+    loading,
+    onHoverGame,
+    selectedSport,
+    onSelectSport,
+    searchQuery,
+    onSearchQueryChange,
+    onClearFilters,
+    resultCount,
+    totalCount,
+    sortBy,
+    onSortByChange,
+    radiusMiles,
+    onRadiusChange,
+    locationLabel,
+    onUseCurrentLocation,
+    distanceBySessionId
+}: PickupListProps) => {
     // Internal filtering state can stay here for now
 
+    const hasFilters = searchQuery.trim().length > 0 || selectedSport !== null;
 
     if (loading) {
         return (
@@ -34,13 +70,81 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
         <div className="flex flex-col h-full bg-zinc-950">
             {/* Filters/Search */}
             <div className="p-4 space-y-4 shrink-0 border-b border-zinc-900 bg-black/40">
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Showing</p>
+                        <p className="text-sm font-bold text-white">
+                            {resultCount} of {totalCount} games
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2 text-right text-xs text-zinc-500">
+                        <MapPin className="h-4 w-4 text-emerald-500" />
+                        <span className="line-clamp-2 max-w-[170px]">
+                            Within {radiusMiles} mi of {locationLabel}
+                        </span>
+                    </div>
+                </div>
+
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
                     <Input
-                        placeholder="Search sport or venue..."
-                        className="pl-10 bg-zinc-900 border-zinc-800 text-white rounded-xl focus-visible:ring-emerald-500"
+                        placeholder="Search games, venues, sports..."
+                        value={searchQuery}
+                        onChange={(event) => onSearchQueryChange(event.target.value)}
+                        className="h-12 pl-10 pr-10 bg-zinc-900 border-zinc-800 text-white rounded-xl focus-visible:ring-emerald-500"
                     />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => onSearchQueryChange("")}
+                            className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-zinc-500 hover:text-white"
+                            aria-label="Clear search"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    )}
                 </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                    <label className="flex h-12 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3">
+                        <SlidersHorizontal className="h-4 w-4 text-zinc-500" />
+                        <span className="sr-only">Sort games</span>
+                        <select
+                            value={sortBy}
+                            onChange={(event) => onSortByChange(event.target.value as SortOption)}
+                            className="min-w-0 flex-1 bg-transparent text-sm font-bold text-white outline-none"
+                        >
+                            <option value="soonest" className="bg-zinc-950">Soonest first</option>
+                            <option value="nearest" className="bg-zinc-950">Nearest first</option>
+                        </select>
+                    </label>
+                    <label className="flex h-12 items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3">
+                        <LocateFixed className="h-4 w-4 text-zinc-500" />
+                        <span className="sr-only">Search radius</span>
+                        <select
+                            value={radiusMiles}
+                            onChange={(event) => onRadiusChange(Number(event.target.value))}
+                            className="min-w-0 flex-1 bg-transparent text-sm font-bold text-white outline-none"
+                        >
+                            {RADIUS_OPTIONS.map((radius) => (
+                                <option key={radius} value={radius} className="bg-zinc-950">
+                                    {radius} miles
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                </div>
+
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onUseCurrentLocation}
+                    className="h-11 w-full rounded-xl border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800 hover:text-white"
+                >
+                    <LocateFixed className="mr-2 h-4 w-4" />
+                    Use My Location
+                </Button>
+
                 <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
                     <Badge
                         variant="outline"
@@ -73,7 +177,34 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
             {/* Game List */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
                 {sessions.length === 0 ? (
-                    <div className="text-center py-10 text-zinc-500">No games found near you.</div>
+                    <div className="flex min-h-[320px] flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/40 px-6 py-10 text-center">
+                        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+                            <Search className="h-6 w-6" />
+                        </div>
+                        <h3 className="text-lg font-black uppercase tracking-tight text-white">No games match this view</h3>
+                        <p className="mt-2 max-w-[260px] text-sm leading-6 text-zinc-500">
+                            Try a wider radius, clear the sport/search filters, or use your current location.
+                        </p>
+                        <div className="mt-6 flex w-full max-w-[280px] flex-col gap-2">
+                            <Button
+                                type="button"
+                                onClick={() => onRadiusChange(100)}
+                                className="h-11 rounded-xl bg-emerald-500 font-bold text-black hover:bg-emerald-400"
+                            >
+                                Expand to 100 miles
+                            </Button>
+                            {hasFilters && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={onClearFilters}
+                                    className="h-11 rounded-xl border-zinc-800 bg-zinc-950 text-zinc-200 hover:bg-zinc-900 hover:text-white"
+                                >
+                                    Clear filters
+                                </Button>
+                            )}
+                        </div>
+                    </div>
                 ) : (
                     sessions.map((game) => (
                         <div
@@ -125,6 +256,11 @@ export const PickupList = ({ sessions, loading, onHoverGame, selectedSport, onSe
                                     <div className="flex items-center gap-2">
                                         <MapPin className="h-3 w-3 text-zinc-500" />
                                         <span className="truncate">{game.location}</span>
+                                        {distanceBySessionId[game.id] != null && (
+                                            <span className="shrink-0 text-[11px] text-emerald-400">
+                                                {distanceBySessionId[game.id].toFixed(1)} mi
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-3 w-3 text-zinc-500" />
