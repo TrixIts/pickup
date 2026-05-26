@@ -48,3 +48,22 @@ export function getDayOfWeek(dateString: string): string {
 export function getZoomFromRadius(radiusMiles: number): number {
   return Math.max(9, Math.min(14, Math.round(13 - Math.log2(radiusMiles / 2.5))));
 }
+
+/** Calculate straight-line distance between two coordinates in miles. */
+export function getDistanceMiles(
+  from: { latitude: number; longitude: number },
+  to: { latitude: number; longitude: number }
+): number {
+  const earthRadiusMiles = 3958.8;
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const dLat = toRadians(to.latitude - from.latitude);
+  const dLng = toRadians(to.longitude - from.longitude);
+  const lat1 = toRadians(from.latitude);
+  const lat2 = toRadians(to.latitude);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+
+  return earthRadiusMiles * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
